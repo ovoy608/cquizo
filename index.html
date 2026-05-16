@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CQuizo — Your Exam Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        'display': ['Outfit', 'sans-serif'], 
+                        'bangla': ['Noto Sans Bengali', 'sans-serif'] 
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #FFD600;
+            --bg-end: #FFAB00;
+            --surface: #FFFFFF;
+            --card: #FFFFFF;
+            --border: #F0E6B8;
+            --text: #1A1A1A;
+            --text-muted: #5F6368;
+            --accent: #6200EA;
+            --accent-dim: rgba(98, 0, 234, 0.1);
+            --secondary: #304FFE;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3700B3; }
+
+        #heroCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+        .subject-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .subject-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: var(--card-accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+        .subject-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--card-accent);
+            box-shadow: 0 15px 30px -10px rgba(98, 0, 234, 0.2);
+        }
+        .subject-card:hover::before { transform: scaleX(1); }
+
+        .quiz-option {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .quiz-option:hover:not(.disabled) {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            transform: translateX(4px);
+        }
+        .quiz-option.correct { border-color: #22C55E !important; background: rgba(34, 197, 94, 0.1) !important; }
+        .quiz-option.wrong { border-color: #EF4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
+        .quiz-option.disabled { pointer-events: none; opacity: 0.7; }
+        .quiz-option.correct.disabled, .quiz-option.wrong.disabled { opacity: 1; }
+
+        .chapter-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .chapter-card:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(98, 0, 234, 0.15);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeInUp 0.5s ease forwards; }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.7s cubic-bezier(0.16,1,0.3,1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+
+<header id="mainHeader" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" style="background:transparent;">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <a href="#" onclick="showHome()" class="flex items-center gap-3 group">
+            <div class="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg shadow-[rgba(98,0,234,0.3)]">
+                <i class="fas fa-bolt text-white text-lg"></i>
+            </div>
+            <span class="text-xl font-extrabold tracking-tight text-[var(--text)]">Cquizo</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-6">
+            <a href="#subjects" class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">Subjects</a>
+        </nav>
+    </div>
+</header>
+
+<main id="app">
+    <div id="homeView">
+        <section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#FFD600] to-[#FFAB00]">
+            <canvas id="heroCanvas"></canvas>
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg)] z-[1]"></div>
+            
+            <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+                <div class="inline-flex items-center gap-2 bg-white/50 border border-[var(--accent)]/30 rounded-full px-5 py-2 mb-8 backdrop-blur-sm">
+                    <span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span>
+                    <span class="text-[var(--accent)] text-sm font-bold tracking-wide">Commerce Stream Focused</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-black leading-tight tracking-tight mb-6 text-[var(--text)]">
+                    Ace Your Exams <br>
+                    <span class="bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] bg-clip-text text-transparent">With Cquizo</span>
+                </h1>
+                <p class="text-lg md:text-xl text-[var(--text-muted)] max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+                    Practice chapter-wise MCQs for all Commerce subjects. Track your progress, identify weak spots, and build confidence.
+                </p>
+                <a href="#subjects" class="inline-flex items-center gap-3 px-8 py-4 bg-[var(--accent)] text-white font-bold rounded-xl hover:bg-[#3700B3] transition-all shadow-lg shadow-[rgba(98,0,234,0.3)] hover:shadow-xl hover:-translate-y-0.5">
+                    <i class="fas fa-rocket"></i> Start Practicing
+                </a>
+            </div>
+        </section>
+
+        <section id="subjects" class="py-24 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16 reveal">
+                    <span class="text-[var(--accent)] font-bold text-sm tracking-widest uppercase">Choose Your Subject</span>
+                    <h2 class="text-4xl md:text-5xl font-extrabold mt-3 tracking-tight text-[var(--text)]">13 Sections Covered</h2>
+                    <p class="text-[var(--text-muted)] mt-4 max-w-xl mx-auto font-bangla font-semibold">সকল অধ্যায়ের প্রস্তুতি এখন Cquizo তে!  </p>
+                </div>
+                <div id="subjectGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+            </div>
+        </section>
+    </div>
+
+    <div id="quizView" class="hidden min-h-screen pt-24 pb-16 px-6 bg-[var(--bg)]">
+        <div class="max-w-3xl mx-auto">
+            <div class="flex items-center justify-between mb-8 animate-in">
+                <button onclick="goBackFromQuiz()" class="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors font-medium">
+                    <i class="fas fa-arrow-left"></i> <span id="backButtonText">Back to Subjects</span>
+                </button>
+                <div class="flex items-center gap-4">
+                    <span id="quizSubjectName" class="text-sm font-bold px-4 py-1.5 rounded-full bg-[var(--accent-dim)] text-[var(--accent)] uppercase tracking-wide"></span>
+                    <div class="flex items-center gap-2 text-[var(--accent)] font-bold bg-white px-3 py-1 rounded-lg shadow-sm">
+                        <i class="fas fa-star"></i>
+                        <span id="quizScore">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full h-2 bg-white rounded-full mb-10 overflow-hidden shadow-inner">
+                <div id="quizProgress" class="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--secondary)] transition-all duration-500 ease-out rounded-full" style="width: 0%"></div>
+            </div>
+
+            <!-- Chapter Selection View (Only for ICT for now) -->
+            <div id="chapterSelection" class="hidden animate-in">
+                <div class="bg-white border border-[var(--border)] rounded-2xl p-8 md:p-10 shadow-xl">
+                    <h3 class="text-2xl font-bold mb-2 text-[var(--text)]">Select Chapter</h3>
+                    <p class="text-[var(--text-muted)] mb-8 font-bangla">অধ্যায় নির্বাচন করুন</p>
+                    <div id="chapterGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div id="questionCard" class="hidden bg-white border border-[var(--border)] rounded-2xl p-8 md:p-10 shadow-xl animate-in">
+                <div class="flex items-center justify-between mb-6">
+                    <span id="questionNum" class="text-sm font-semibold text-[var(--text-muted)]">Question 1 / 5</span>
+                    <span id="chapterTag" class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--accent-dim)] text-[var(--accent)] hidden font-bangla"></span>
+                </div>
+                
+                <h3 id="questionText" class="text-xl md:text-2xl font-bold mb-8 leading-snug font-bangla text-[var(--text)]"></h3>
+
+                <div id="optionsContainer" class="space-y-4 mb-8"></div>
+
+                <div id="feedbackBox" class="hidden rounded-xl p-5 mb-6 border"></div>
+
+                <div class="flex justify-end">
+                    <button id="nextBtn" class="hidden px-8 py-3 bg-[var(--accent)] text-white font-bold rounded-xl hover:bg-[#3700B3] transition-all shadow-md" onclick="nextQuestion()">
+                        Next <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Complete -->
+            <div id="quizComplete" class="hidden mt-8 bg-white border border-[var(--border)] rounded-2xl p-10 text-center shadow-xl animate-in">
+                <div class="text-6xl mb-6"><i class="fas fa-trophy text-yellow-500"></i></div>
+                <h3 class="text-3xl font-extrabold mb-2 text-[var(--text)]">Quiz Complete!</h3>
+                <p id="finalScoreText" class="text-[var(--text-muted)] text-lg mb-6"></p>
+                <div id="finalGrade" class="text-6xl font-black mb-8"></div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="retryQuiz()" class="px-8 py-3 border-2 border-[var(--accent)] text-[var(--accent)] font-bold rounded-xl hover:bg-[var(--accent-dim)] transition-colors">
+                        <i class="fas fa-redo mr-2"></i> Retry
+                    </button>
+                    <button onclick="showHome()" class="px-8 py-3 bg-[var(--accent)] text-white font-bold rounded-xl hover:bg-[#3700B3] transition-colors shadow-md">
+                        <i class="fas fa-home mr-2"></i> All Subjects
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer id="mainFooter" class="bg-[#FFAB00] border-t border-[var(--border)] py-10 px-6 mt-12">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+                <i class="fas fa-bolt text-white text-sm"></i>
+            </div>
+            <span class="font-bold tracking-tight text-[var(--text)]">Cquizo</span>
+        </div>
+        <p class="text-[var(--text-muted)] text-sm text-center font-medium">Built for Commerce students. Practice smarter, score better.</p>
+    </div>
+</footer>
+
+<script>
+const subjects = [
+    { id: 'ban1', name: 'বাংলা ১ম পত্র', icon: 'fa-book-open', color: '#D50000', hasChapters: false },
+    { id: 'ban2', name: 'বাংলা ২য় পত্র', icon: 'fa-feather-pointed', color: '#E65100', hasChapters: false },
+    { id: 'eng1', name: 'English 1st Paper', icon: 'fa-globe', color: '#2962FF', hasChapters: false },
+    { id: 'eng2', name: 'English 2nd Paper', icon: 'fa-pen-nib', color: '#304FFE', hasChapters: false },
+    { id: 'ict', name: 'ICT', icon: 'fa-laptop-code', color: '#00C853', hasChapters: true },
+    { id: 'mgt1', name: 'Management 1st Paper', icon: 'fa-sitemap', color: '#00BFA5', hasChapters: false },
+    { id: 'mgt2', name: 'Management 2nd Paper', icon: 'fa-network-wired', color: '#0091EA', hasChapters: false },
+    { id: 'prod1', name: 'Production 1st Paper', icon: 'fa-industry', color: '#FF6D00', hasChapters: false },
+    { id: 'prod2', name: 'Production 2nd Paper', icon: 'fa-boxes-stacked', color: '#FFAB00', hasChapters: false },
+    { id: 'fin1', name: 'Finance 1st Paper', icon: 'fa-coins', color: '#6200EA', hasChapters: false },
+    { id: 'fin2', name: 'Finance 2nd Paper', icon: 'fa-landmark', color: '#AA00FF', hasChapters: false },
+    { id: 'acc1', name: 'Accounting 1st Paper', icon: 'fa-calculator', color: '#C51162', hasChapters: false },
+    { id: 'acc2', name: 'Accounting 2nd Paper', icon: 'fa-file-invoice-dollar', color: '#DD2C00', hasChapters: false }
+];
+
+const ictChapters = [
+    { id: 'ict_ch1', name: 'অধ্যায় ১', fullName: 'তথ্য ও যোগাযোগ প্রযুক্তি: বিশ্ব ও বাংলাদেশ প্রেক্ষিত' },
+    { id: 'ict_ch2', name: 'অধ্যায় ২', fullName: 'ডেটা কমিউনিকেশন ও কম্পিউটার নেটওয়ার্কিং' },
+    { id: 'ict_ch3_1', name: 'অধ্যায় ৩.১', fullName: 'সংখ্যা পদ্ধতি' },
+    { id: 'ict_ch3_2', name: 'অধ্যায় ৩.২', fullName: 'ডিজিটাল ডিভাইস' },
+    { id: 'ict_ch4', name: 'অধ্যায় ৪', fullName: 'ওয়েব ডিজাইন পরিচিতি এবং HTML' },
+    { id: 'ict_ch5', name: 'অধ্যায় ৫', fullName: 'প্রোগ্রামিং ভাষা' },
+    { id: 'ict_ch6', name: 'অধ্যায় ৬', fullName: 'ডাটাবেজ ম্যানেজমেন্ট সিস্টেম' }
+];
+
+const quizData = {
+    'ban1': [
+        { q: 'বাংলা ভাষার উৎস কোন ভাষা পরিবার থেকে?', opts: ['অস্ট্রিক', 'দ্রাবিড়', 'ইন্দো-ইউরোপীয়', 'সিনো-টিবেটান'], correct: 2 },
+        { q: 'বাংলা সাহিত্যের আদি কবি কে?', opts: ['চণ্ডীদাস', 'মুকুন্দরাম চক্রবর্তী', 'কাহ্নপাদ', 'বিদ্যাপতি'], correct: 2 },
+        { q: 'শ্রীকৃষ্ণকীর্তন কাব্যের রচয়িতা কে?', opts: ['বড়ু চণ্ডীদাস', 'কাহ্নপাদ', 'বিদ্যাপতি', 'জয়নন্দ'], correct: 0 },
+        { q: 'চর্যাপদ কোন ধর্মের সাহিত্য?', opts: ['হিন্দু', 'বৌদ্ধ', 'জৈন', 'খ্রিষ্টান'], correct: 1 },
+        { q: 'বাংলা ব্যাকরণে কত প্রকার শব্দ আছে?', opts: ['৪ প্রকার', '৫ প্রকার', '৬ প্রকার', '৩ প্রকার'], correct: 0 }
+    ],
+    'ban2': [
+        { q: 'সন্ধির প্রধান প্রকার কয়টি?', opts: ['২টি', '৩টি', '৪টি', '৫টি'], correct: 0 },
+        { q: 'যে সন্ধিতে উচ্চারণের সুবিধার জন্য কোনো বর্ণের উচ্চারণ হয় না, তাকে কী বলে?', opts: ['স্বরসন্ধি', 'ব্যঞ্জনসন্ধি', 'বিসর্গসন্ধি', 'অলোপসন্ধি'], correct: 3 },
+        { q: 'প্রত্যয়ের প্রধান প্রকার কয়টি?', opts: ['২টি', '৩টি', '৪টি', '৫টি'], correct: 0 },
+        { q: 'কোনটি বাংলা কৃদন্ত শব্দ?', opts: ['কাঠমিস্ত্রি', 'রাজপুত্র', 'ধোয়া', 'বুড়ো'], correct: 2 },
+        { q: 'অনুকার অর্থ কী?', opts: ['অনুকরণ', 'অনুসরণ', 'প্রতিকৃতি', 'সাদৃশ্য'], correct: 0 }
+    ],
+    'eng1': [
+        { q: 'Choose the correct synonym for "Ephemeral".', opts: ['Permanent', 'Fleeting', 'Strong', 'Ancient'], correct: 1 },
+        { q: 'What is the antonym of "Lucid"?', opts: ['Clear', 'Obscure', 'Bright', 'Intelligent'], correct: 1 },
+        { q: 'Who wrote "Romeo and Juliet"?', opts: ['Charles Dickens', 'William Shakespeare', 'Jane Austen', 'Mark Twain'], correct: 1 },
+        { q: 'Fill in the blank: He is accustomed ___ hard work.', opts: ['with', 'to', 'for', 'in'], correct: 1 },
+        { q: 'Choose the correct spelling:', opts: ['Accomodation', 'Accommodation', 'Acomodation', 'Acommodation'], correct: 1 }
+    ],
+    'eng2': [
+        { q: 'Identify the correct passive form of: "She writes a letter."', opts: ['A letter is written by her.', 'A letter was written by her.', 'A letter is being written by her.', 'A letter has been written by her.'], correct: 0 },
+        { q: 'Change the narration: He said, "I am happy."', opts: ['He said that he is happy.', 'He said that he was happy.', 'He said that I am happy.', 'He said that I was happy.'], correct: 1 },
+        { q: 'I wish I ___ a bird.', opts: ['am', 'was', 'were', 'be'], correct: 2 },
+        { q: 'Which one is a correct sentence?', opts: ['He does not knows me.', 'He do not know me.', 'He does not know me.', 'He not know me.'], correct: 2 },
+        { q: 'Had I known you, I ___ helped you.', opts: ['will', 'would', 'would have', 'should'], correct: 2 }
+    ],
+    
+    // ICT CHAPTERS
+    'ict_ch1': [
+        { q: 'তথ্য ও যোগাযোগ প্রযুক্তির সংক্ষিপ্ত রূপ কী?', opts: ['ICT', 'ITC', 'CIT', 'TIC'], correct: 0 },
+        { q: 'বাংলাদেশে ইন্টারনেট সেবা প্রদানকারী প্রতিষ্ঠানকে কী বলে?', opts: ['ISP', 'IP', 'TCP', 'URL'], correct: 0 },
+        { q: 'বাংলাদেশে প্রথম সাবমেরিন ক্যাবল কবে স্থাপন করা হয়?', opts: ['২০০৫', '২০০৬', '২০০৭', '২০০৮'], correct: 1 },
+        { q: 'ডিজিটাল বাংলাদেশ কোন সালে ঘোষণা করা হয়?', opts: ['২০০৯', '২০১০', '২০১১', '২০২১'], correct: 2 },
+        { q: 'কম্পিউটারের মেমরিতে ডেটা সংরক্ষণের একক কোনটি?', opts: ['Bit', 'Byte', 'Kilobyte', 'Megabyte'], correct: 0 }
+    ],
+    'ict_ch2': [
+        { q: 'ডেটা এক স্থান থেকে অন্য স্থানে স্থানান্তরের প্রক্রিয়াকে কী বলে?', opts: ['ডেটা কমিউনিকেশন', 'ডেটা প্রসেসিং', 'নেটওয়ার্কিং', 'প্রোগ্রামিং'], correct: 0 },
+        { q: 'কোনটি নেটওয়ার্ক টপোলজি?', opts: ['Star', 'Line', 'Square', 'Triangle'], correct: 0 },
+        { q: 'লোকাল এরিয়া নেটওয়ার্কের সংক্ষিপ্ত রূপ কী?', opts: ['LAN', 'MAN', 'WAN', 'PAN'], correct: 0 },
+        { q: 'মডেমের পূর্ণরূপ কী?', opts: ['Modulator Demodulator', 'Main Data Memory', 'Multi Data Mode', 'Modem Data Memory'], correct: 0 },
+        { q: 'কোনটি তারযুক্ত মাধ্যম?', opts: ['টুইস্টেড পেয়ার ক্যাবল', 'ওয়াই-ফাই', 'ব্লুটুথ', 'মাইক্রোওয়েভ'], correct: 0 }
+    ],
+    'ict_ch3_1': [
+        { q: 'দশমিক সংখ্যা পদ্ধতিতে ভিত্তি কত?', opts: ['২', '৮', '১০', '১৬'], correct: 2 },
+        { q: 'বাইনারি সংখ্যা পদ্ধতিতে কতটি ডিজিট ব্যবহৃত হয়?', opts: ['২টি', '৮টি', '১০টি', '১৬টি'], correct: 0 },
+        { q: '(১০)১০ এর বাইনারি রূপ কী?', opts: ['১০১০', '১০০১', '১১০০', '১০০০'], correct: 0 },
+        { q: 'হেক্সাডেসিমাল সংখ্যা পদ্ধতির ভিত্তি কত?', opts: ['২', '৮', '১০', '১৬'], correct: 3 },
+        { q: 'অক্টাল সংখ্যা পদ্ধতিতে কোন ডিজিটটি ব্যবহৃত হয় না?', opts: ['৭', '৮', '৬', '৫'], correct: 1 }
+    ],
+    'ict_ch3_2': [
+        { q: 'কম্পিউটারের মস্তিষ্ক কোনটি?', opts: ['RAM', 'CPU', 'Hard Disk', 'Monitor'], correct: 1 },
+        { q: 'কোনটি ইনপুট ডিভাইস?', opts: ['মাউস', 'মনিটর', 'প্রিন্টার', 'স্পিকার'], correct: 0 },
+        { q: 'কোনটি আউটপুট ডিভাইস?', opts: ['কীবোর্ড', 'স্ক্যানার', 'প্রিন্টার', 'মাউস'], correct: 2 },
+        { q: 'RAM এর পূর্ণরূপ কী?', opts: ['Random Access Memory', 'Read Access Memory', 'Rapid Access Memory', 'Real Access Memory'], correct: 0 },
+        { q: 'কোনটি সেকেন্ডারি স্টোরেজ ডিভাইস?', opts: ['RAM', 'ROM', 'হার্ড ডিস্ক', 'ক্যাশে মেমরি'], correct: 2 }
+    ],
+    'ict_ch4': [
+        { q: 'HTML এর পূর্ণরূপ কী?', opts: ['Hyper Text Markup Language', 'High Text Markup Language', 'Hyper Tabular Markup Language', 'None of these'], correct: 0 },
+        { q: 'ওয়েবপেজের শিরোনাম দেওয়ার জন্য কোন ট্যাগ ব্যবহৃত হয়?', opts: ['<head>', '<title>', '<body>', '<html>'], correct: 1 },
+        { q: 'কোনটি ওয়েব ব্রাউজার?', opts: ['Google Chrome', 'Notepad', 'Photoshop', 'Windows'], correct: 0 },
+        { q: 'HTML এ বৃহত্তম হেডিং ট্যাগ কোনটি?', opts: ['<h6>', '<h1>', '<head>', '<h3>'], correct: 1 },
+        { q: 'ওয়েব ডিজাইনে সিএসএস এর কাজ কী?', opts: ['ডেটাবেস ম্যানেজমেন্ট', 'পেজের স্টাইল ও লেআউট নির্ধারণ', 'প্রোগ্রাম লজিক তৈরি', 'নেটওয়ার্ক নিয়ন্ত্রণ'], correct: 1 }
+    ],
+    'ict_ch5': [
+        { q: 'মেশিন ভাষা কোন প্রজন্মের ভাষা?', opts: ['প্রথম প্রজন্ম', 'দ্বিতীয় প্রজন্ম', 'তৃতীয় প্রজন্ম', 'চতুর্থ প্রজন্ম'], correct: 0 },
+        { q: 'কোনটি হাই লেভেল প্রোগ্রামিং ভাষা?', opts: ['C', 'Assembly', 'Machine Language', 'Binary Code'], correct: 0 },
+        { q: 'সি প্রোগ্রামিং ভাষা কে উদ্ভাবন করেন?', opts: ['বিল গেটস', 'ডেনিস রিচি', 'মার্ক জাকারবার্গ', 'স্টিভ জবস'], correct: 1 },
+        { q: 'অ্যাসেম্বলি ভাষাকে মেশিন ভাষায় রূপান্তরের জন্য কী প্রয়োজন?', opts: ['কম্পাইলার', 'ইন্টারপ্রেটার', 'অ্যাসেম্বলার', 'লোডার'], correct: 2 },
+        { q: 'কোনটি অবজেক্ট ওরিয়েন্টেড প্রোগ্রামিং ভাষা?', opts: ['C', 'Pascal', 'Fortran', 'Java'], correct: 3 }
+    ],
+    'ict_ch6': [
+        { q: 'DBMS এর পূর্ণরূপ কী?', opts: ['Database Management System', 'Data Base Main System', 'Database Multiple System', 'Data Base Management Software'], correct: 0 },
+        { q: 'ডাটাবেজের সারণিতে একটি সারিকে কী বলা হয়?', opts: ['Record', 'Field', 'Table', 'Key'], correct: 0 },
+        { q: 'ডাটাবেজের সারণিতে একটি কলামকে কী বলা হয়?', opts: ['Record', 'Field', 'Table', 'Query'], correct: 1 },
+        { q: 'কোনটি ডাটাবেজ ম্যানেজমেন্ট সিস্টেম সফটওয়্যার?', opts: ['MS Word', 'MS Access', 'MS PowerPoint', 'Photoshop'], correct: 1 },
+        { q: 'রিলেশনাল ডাটাবেজ মডেলে কোন ভাষা ব্যবহৃত হয়?', opts: ['C++', 'Java', 'SQL', 'HTML'], correct: 2 }
+    ],
+
+    'mgt1': [
+        { q: 'Who is known as the father of modern management?', opts: ['Henry Fayol', 'F.W. Taylor', 'Peter Drucker', 'Elton Mayo'], correct: 0 },
+        { q: 'How many principles of management did Henry Fayol propose?', opts: ['12', '14', '16', '10'], correct: 1 },
+        { q: 'Management is a:', opts: ['Science only', 'Art only', 'Both Science and Art', 'Neither'], correct: 2 },
+        { q: 'Which level of management interacts directly with workers?', opts: ['Top Level', 'Middle Level', 'Lower Level', 'All levels'], correct: 2 },
+        { q: 'Planning is looking ahead, controlling is looking:', opts: ['Behind', 'Around', 'Above', 'Below'], correct: 0 }
+    ],
+    'mgt2': [
+        { q: 'The process of determining future personnel needs is called:', opts: ['Recruitment', 'Human Resource Planning', 'Selection', 'Training'], correct: 1 },
+        { q: 'Performance appraisal is a part of:', opts: ['Planning', 'Controlling', 'Directing', 'Staffing'], correct: 3 },
+        { q: 'Job analysis involves:', opts: ['Job description & job specification', 'Recruitment & selection', 'Training & development', 'Wage & salary'], correct: 0 },
+        { q: 'Which test measures the intelligence of a candidate?', opts: ['Aptitude test', 'Intelligence test', 'Personality test', 'Trade test'], correct: 1 },
+        { q: 'On-the-job training includes:', opts: ['Apprenticeship', 'Vestibule training', 'Role playing', 'Case study'], correct: 0 }
+    ],
+    'prod1': [
+        { q: 'The process of converting raw materials into finished goods is called:', opts: ['Marketing', 'Production', 'Financing', 'Staffing'], correct: 1 },
+        { q: 'Which layout is suitable for batch production?', opts: ['Product layout', 'Process layout', 'Fixed position layout', 'Combined layout'], correct: 1 },
+        { q: 'Method study is a part of:', opts: ['Quality control', 'Work study', 'Inventory control', 'Production planning'], correct: 1 },
+        { q: 'TPM stands for:', opts: ['Total Productive Maintenance', 'Total Preventive Maintenance', 'Total Planned Management', 'Total Process Manufacturing'], correct: 0 },
+        { q: 'ISO stands for:', opts: ['International Standard Organization', 'Indian Standards Organization', 'Integrated Standard Organization', 'Internal Standard Office'], correct: 0 }
+    ],
+    'prod2': [
+        { q: 'MRP stands for:', opts: ['Material Requirement Planning', 'Man Resource Planning', 'Machine Repair Process', 'Material Receiving Protocol'], correct: 0 },
+        { q: 'The maximum inventory level depends on:', opts: ['Consumption rate', 'Lead time', 'Storage space', 'All of the above'], correct: 3 },
+        { q: 'JIT stands for:', opts: ['Just In Time', 'Job In Training', 'Join In Team', 'Just In Total'], correct: 0 },
+        { q: 'Which chart is used for scheduling?', opts: ['Flow chart', 'Gantt chart', 'Control chart', 'Process chart'], correct: 1 },
+        { q: 'Quality circle is a:', opts: ['Quality control group', 'Small group of employees', 'Management group', 'Vendor group'], correct: 1 }
+    ],
+    'fin1': [
+        { q: 'Finance is the lifeblood of:', opts: ['Business', 'Society', 'Government', 'All of the above'], correct: 0 },
+        { q: 'Which finance is raised for a period of more than 10 years?', opts: ['Short-term', 'Medium-term', 'Long-term', 'All of these'], correct: 2 },
+        { q: 'Equity shareholders are called:', opts: ['Owners of the company', 'Creditors of the company', 'Employees of the company', 'Debtors of the company'], correct: 0 },
+        { q: 'Debenture holders are:', opts: ['Owners', 'Creditors', 'Customers', 'Suppliers'], correct: 1 },
+        { q: 'Undercapitalization means:', opts: ['Excess of capital', 'Shortage of capital', 'Proper capital', 'None of these'], correct: 1 }
+    ],
+    'fin2': [
+        { q: 'Working capital is the difference between:', opts: ['Current assets and current liabilities', 'Fixed assets and current liabilities', 'Current assets and fixed assets', 'Fixed assets and fixed liabilities'], correct: 0 },
+        { q: 'Cash flow statement is prepared as per:', opts: ['AS-3', 'AS-10', 'AS-6', 'AS-2'], correct: 0 },
+        { q: 'Dividend is paid on:', opts: ['Equity capital', 'Preference capital', 'Debentures', 'Both A and B'], correct: 3 },
+        { q: 'Leverage analysis is associated with:', opts: ['Profit planning', 'Capital structure', 'Dividend decision', 'Working capital'], correct: 1 },
+        { q: 'Cost of capital is the:', opts: ['Return expected by investors', 'Expense of the company', 'Profit earned', 'Loss incurred'], correct: 0 }
+    ],
+    'acc1': [
+        { q: 'Accounting is the language of:', opts: ['Business', 'Government', 'School', 'Society'], correct: 0 },
+        { q: 'Double entry system was introduced by:', opts: ['Adam Smith', 'Luca Pacioli', 'Henry Fayol', 'Kohler'], correct: 1 },
+        { q: 'The basic accounting equation is:', opts: ['Assets = Liabilities + Capital', 'Assets = Liabilities - Capital', 'Liabilities = Assets + Capital', 'Capital = Assets + Liabilities'], correct: 0 },
+        { q: 'Which account has a debit balance?', opts: ['Rent paid', 'Rent received', 'Commission received', 'Discount received'], correct: 0 },
+        { q: 'Trial Balance checks the:', opts: ['Arithmetical accuracy', 'Financial position', 'Profit or loss', 'Cash balance'], correct: 0 }
+    ],
+    'acc2': [
+        { q: 'Depreciation is charged on:', opts: ['Current assets', 'Fixed assets', 'Fictitious assets', 'Liquid assets'], correct: 1 },
+        { q: 'Reserve is created out of:', opts: ['Capital', 'Profit', 'Loan', 'Sales'], correct: 1 },
+        { q: 'Goodwill is a:', opts: ['Current asset', 'Fixed asset', 'Fictitious asset', 'Intangible asset'], correct: 3 },
+        { q: 'Receipts & Payments account is a:', opts: ['Personal account', 'Real account', 'Nominal account', 'None of these'], correct: 1 },
+        { q: 'Income & Expenditure account reveals:', opts: ['Cash balance', 'Surplus or Deficit', 'Capital fund', 'Assets & Liabilities'], correct: 1 }
+    ]
+};
+
+let currentSubject = null;
+let currentChapterId = null;
+let currentQuestionIndex = 0;
+let score = 0;
+let answered = false;
+let currentQuizData = [];
+
+function renderSubjects() {
+    const grid = document.getElementById('subjectGrid');
+    grid.innerHTML = '';
+    subjects.forEach((sub, index) => {
+        const card = document.createElement('div');
+        card.className = 'subject-card rounded-2xl p-6 reveal';
+        card.style.setProperty('--card-accent', sub.color);
+        card.style.animationDelay = `${index * 0.05}s`;
+        card.onclick = () => {
+            if (sub.hasChapters) {
+                showChapterSelection(sub);
+            } else {
+                startQuiz(sub.id, sub.id, sub.name);
+            }
+        };
+        
+        let subText = sub.hasChapters ? `${ictChapters.length} Chapters` : `${quizData[sub.id].length} Questions`;
+        
+        card.innerHTML = `
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-transform" style="background:${sub.color}15;">
+                <i class="fas ${sub.icon} text-xl" style="color:${sub.color};"></i>
+            </div>
+            <h3 class="text-lg font-bold mb-2 font-bangla text-[var(--text)]">${sub.name}</h3>
+            <p class="text-[var(--text-muted)] text-sm mb-5">${subText}</p>
+            <div class="flex items-center gap-2 text-sm font-semibold" style="color:${sub.color};">
+                <span>${sub.hasChapters ? 'View Chapters' : 'Start Quiz'}</span><i class="fas fa-arrow-right text-xs"></i>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function showHome() {
+    document.getElementById('homeView').classList.remove('hidden');
+    document.getElementById('quizView').classList.add('hidden');
+    document.getElementById('mainHeader').style.background = 'transparent';
+    document.getElementById('mainHeader').style.backdropFilter = 'none';
+    document.getElementById('mainHeader').style.boxShadow = 'none';
+    document.getElementById('mainFooter').classList.remove('hidden');
+    document.getElementById('questionCard').classList.add('hidden');
+    document.getElementById('quizComplete').classList.add('hidden');
+    document.getElementById('chapterSelection').classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showChapterSelection(subjectData) {
+    currentSubject = subjectData.id;
+    
+    document.getElementById('homeView').classList.add('hidden');
+    document.getElementById('quizView').classList.remove('hidden');
+    document.getElementById('chapterSelection').classList.remove('hidden');
+    document.getElementById('questionCard').classList.add('hidden');
+    document.getElementById('quizComplete').classList.add('hidden');
+    
+    document.getElementById('mainHeader').style.background = 'rgba(255, 214, 0, 0.9)';
+    document.getElementById('mainHeader').style.backdropFilter = 'blur(10px)';
+    document.getElementById('mainHeader').style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
+    
+    document.getElementById('quizSubjectName').textContent = subjectData.name;
+    document.getElementById('quizSubjectName').style.color = subjectData.color;
+    document.getElementById('quizSubjectName').style.background = subjectData.color + '15';
+    document.getElementById('backButtonText').textContent = 'Back to Subjects';
+    
+    document.getElementById('quizProgress').style.width = '0%';
+    document.getElementById('quizScore').textContent = '0';
+    
+    const chapterGrid = document.getElementById('chapterGrid');
+    chapterGrid.innerHTML = '';
+    
+    ictChapters.forEach((ch, index) => {
+        const div = document.createElement('div');
+        div.className = 'chapter-card p-5 rounded-xl border border-[var(--border)]';
+        div.innerHTML = `
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--accent-dim)] text-[var(--accent)] font-bold text-sm">${index + 1}</div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-[var(--text)] mb-1 font-bangla">${ch.name}</h4>
+                    <p class="text-sm text-[var(--text-muted)] font-bangla leading-relaxed">${ch.fullName}</p>
+                    <div class="mt-3 flex items-center gap-2 text-xs font-semibold text-[var(--accent)]">
+                        <span>${quizData[ch.id].length} Questions</span>
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+        div.onclick = () => startQuiz(subjectData.id, ch.id, ch.fullName);
+        chapterGrid.appendChild(div);
+    });
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startQuiz(subjectId, chapterId, name) {
+    currentSubject = subjectId;
+    currentChapterId = chapterId;
+    currentQuestionIndex = 0;
+    score = 0;
+    answered = false;
+    
+    currentQuizData = quizData[chapterId];
+    
+    document.getElementById('chapterSelection').classList.add('hidden');
+    document.getElementById('questionCard').classList.remove('hidden');
+    document.getElementById('quizComplete').classList.add('hidden');
+    
+    document.getElementById('chapterTag').textContent = name;
+    document.getElementById('chapterTag').classList.remove('hidden');
+    
+    document.getElementById('backButtonText').textContent = 'Back to Chapters';
+    
+    document.getElementById('quizScore').textContent = '0';
+    
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBackFromQuiz() {
+    const subData = subjects.find(s => s.id === currentSubject);
+    if (subData && subData.hasChapters) {
+        showChapterSelection(subData);
+    } else {
+        showHome();
+    }
+}
+
+function retryQuiz() {
+    startQuiz(currentSubject, currentChapterId, document.getElementById('chapterTag').textContent);
+}
+
+function renderQuestion() {
+    const questions = currentQuizData;
+    const q = questions[currentQuestionIndex];
+    answered = false;
+
+    const progress = ((currentQuestionIndex) / questions.length) * 100;
+    document.getElementById('quizProgress').style.width = progress + '%';
+    document.getElementById('questionNum').textContent = `Question ${currentQuestionIndex + 1} / ${questions.length}`;
+    document.getElementById('questionText').textContent = q.q;
+
+    const container = document.getElementById('optionsContainer');
+    container.innerHTML = '';
+    const labels = ['A', 'B', 'C', 'D'];
+    
+    q.opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-option w-full text-left p-4 rounded-xl flex items-center gap-4';
+        btn.innerHTML = `
+            <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[var(--bg)] text-[var(--text)]">${labels[i]}</span>
+            <span class="font-medium font-bangla text-[var(--text)]">${opt}</span>
+        `;
+        btn.onclick = () => checkAnswer(i, btn);
+        container.appendChild(btn);
+    });
+
+    document.getElementById('feedbackBox').classList.add('hidden');
+    document.getElementById('nextBtn').classList.add('hidden');
+}
+
+function checkAnswer(selectedIndex, selectedBtn) {
+    if (answered) return;
+    answered = true;
+
+    const q = currentQuizData[currentQuestionIndex];
+    const allBtns = document.querySelectorAll('.quiz-option');
+
+    allBtns.forEach(btn => btn.classList.add('disabled'));
+
+    if (selectedIndex === q.correct) {
+        selectedBtn.classList.add('correct');
+        score++;
+        document.getElementById('quizScore').textContent = score;
+        showFeedback(true);
+    } else {
+        selectedBtn.classList.add('wrong');
+        allBtns[q.correct].classList.add('correct');
+        showFeedback(false);
+    }
+
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.classList.remove('hidden');
+    if (currentQuestionIndex === currentQuizData.length - 1) {
+        nextBtn.innerHTML = 'See Results <i class="fas fa-trophy ml-2"></i>';
+    } else {
+        nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
+    }
+}
+
+function showFeedback(isCorrect) {
+    const fb = document.getElementById('feedbackBox');
+    fb.classList.remove('hidden');
+    if (isCorrect) {
+        fb.className = 'rounded-xl p-5 mb-6 border bg-green-50 border-green-200 animate-in';
+        fb.innerHTML = `<div class="flex items-center gap-3 text-green-700 font-bold"><i class="fas fa-check-circle text-xl"></i> Correct Answer!</div>`;
+    } else {
+        const q = currentQuizData[currentQuestionIndex];
+        fb.className = 'rounded-xl p-5 mb-6 border bg-red-50 border-red-200 animate-in';
+        fb.innerHTML = `
+            <div class="flex items-center gap-3 text-red-700 font-bold mb-2"><i class="fas fa-times-circle text-xl"></i> Incorrect!</div>
+            <div class="text-gray-700 text-sm">The correct answer is: <span class="text-green-700 font-semibold font-bangla">${q.opts[q.correct]}</span></div>
+        `;
+    }
+}
+
+function nextQuestion() {
+    if (currentQuestionIndex < currentQuizData.length - 1) {
+        currentQuestionIndex++;
+        renderQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    const total = currentQuizData.length;
+    const percentage = Math.round((score / total) * 100);
+
+    document.getElementById('quizProgress').style.width = '100%';
+    document.getElementById('questionCard').classList.add('hidden');
+    document.getElementById('quizComplete').classList.remove('hidden');
+    
+    document.getElementById('finalScoreText').textContent = `You scored ${score} out of ${total} (${percentage}%)`;
+    
+    let grade, gradeColor;
+    if (percentage >= 80) { grade = 'A+'; gradeColor = 'text-green-600'; }
+    else if (percentage >= 70) { grade = 'A'; gradeColor = 'text-green-600'; }
+    else if (percentage >= 60) { grade = 'B'; gradeColor = 'text-yellow-600'; }
+    else if (percentage >= 50) { grade = 'C'; gradeColor = 'text-orange-600'; }
+    else { grade = 'F'; gradeColor = 'text-red-600'; }
+
+    const gradeEl = document.getElementById('finalGrade');
+    gradeEl.textContent = grade;
+    gradeEl.className = `text-6xl font-black mb-8 ${gradeColor}`;
+}
+
+(function() {
+    const canvas = document.getElementById('heroCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+
+    function resize() {
+        W = canvas.width = canvas.parentElement.clientWidth;
+        H = canvas.height = canvas.parentElement.clientHeight;
+        initParticles();
+    }
+
+    function initParticles() {
+        particles = [];
+        const count = Math.min(60, Math.floor(W * H / 18000));
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x: Math.random() * W, y: Math.random() * H,
+                vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6,
+                r: Math.random() * 2.5 + 1
+            });
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0 || p.x > W) p.vx *= -1;
+            if (p.y < 0 || p.y > H) p.vy *= -1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(98, 0, 234, 0.3)';
+            ctx.fill();
+        });
+
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 140) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(98, 0, 234, ${0.12 * (1 - dist / 140)})`;
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
+})();
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('visible');
+    });
+}, { threshold: 0.1 });
+
+window.addEventListener('DOMContentLoaded', () => {
+    renderSubjects();
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+});
+</script>
+</body>
+</html>
