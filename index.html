@@ -28,28 +28,40 @@
 .toast.show{transform:translateX(-50%) translateY(0)}
 .topic-scroll{max-height:65vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .badge-hot{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;font-size:9px;padding:1px 6px;border-radius:999px;font-weight:700}
-.pricing-card{transition: all 0.3s; cursor: pointer; position: relative}
-.pricing-card:active{transform: scale(.97)}
-.pricing-card.selected-plan{border-color: #f97316 !important; background: #fff7ed !important; box-shadow: 0 10px 25px -5px rgba(249,115,22,.2)}
+.pricing-card{transition:all .3s;cursor:pointer;position:relative}
+.pricing-card:active{transform:scale(.97)}
+.pricing-card.selected-plan{border-color:#f97316!important;background:#fff7ed!important;box-shadow:0 10px 25px -5px rgba(249,115,22,.2)}
+
+/* Slider Styles */
+.slider-container{position:relative;overflow:hidden;border-radius:1rem;aspect-ratio:16/7}
+.slider-track{display:flex;transition:transform .5s ease-in-out}
+.slider-track img{min-width:100%;height:100%;object-fit:cover}
+.slider-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10}
+.slider-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer;transition:all .3s}
+.slider-dot.active{background:#fff;width:20px;border-radius:4px}
+.slider-nav-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:10;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;border:none}
+.slider-nav-btn:hover{background:rgba(255,255,255,.9)}
+.slider-nav-btn.prev{left:8px}
+.slider-nav-btn.next{right:8px}
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen pb-20">
 <div id="toast" class="toast bg-white text-gray-800 border border-gray-100"></div>
 
-<!-- LOGIN / GUEST MODAL -->
-<div id="loginModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+<!-- PREMIUM NOTICE MODAL (shown only once) -->
+<div id="premiumNoticeModal" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/50 backdrop-blur-sm">
 <div class="bg-white rounded-3xl p-6 mx-4 max-w-sm w-full shadow-2xl anim-slide-up">
 <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-    <img src="https://i.ibb.co.com/7tZhkczH/file-0000000092847208ab46d3662d2faeab.png" alt="CQuizo" class="w-10 h-10 object-contain">
+    <span class="iconify text-orange-500 text-3xl" data-icon="solar:crown-bold"></span>
 </div>
-<h3 class="text-xl font-bold text-gray-800 text-center mb-1">CQuizo-তে স্বাগতম</h3>
-<p class="text-sm text-gray-400 text-center mb-6">অতিথি হিসেবে প্রতিটি বিষয়ের শুধুমাত্র ১ম অধ্যায় ফ্রি। পুরো অ্যাক্সেস পেতে প্রিমিয়াম নিন।</p>
-<button onclick="loginAsGuest()" class="w-full py-3.5 rounded-2xl border-2 border-orange-500 text-orange-600 font-bold mb-3">অতিথি হিসেবে প্রবেশ</button>
-<button onclick="closeLoginModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-lg shadow-orange-200">প্রিমিয়াম অ্যাকাউন্ট নিন</button>
+<h3 class="text-xl font-bold text-gray-800 text-center mb-1">প্রিমিয়াম আনলক করুন</h3>
+<p class="text-sm text-gray-400 text-center mb-6">অতিথি হিসেবে শুধুমাত্র ১ম অধ্যায় ফ্রি। পুরো অ্যাক্সেস পেতে প্রিমিয়াম নিন।</p>
+<button onclick="closePremiumNotice()" class="w-full py-3.5 rounded-2xl border-2 border-gray-200 text-gray-600 font-bold mb-3">পরে দেখব</button>
+<button onclick="goToPremiumFromNotice()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold shadow-lg shadow-orange-200">প্রিমিয়াম নিন →</button>
 </div></div>
 
 <!-- HOME -->
-<div id="page-home" class="page">
+<div id="page-home" class="page active">
 <div class="bg-white sticky top-0 z-40 border-b border-gray-100">
 <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
 <div class="flex items-center gap-2.5">
@@ -62,6 +74,19 @@
 <span class="iconify text-gray-500 text-xl" data-icon="solar:bell-linear"></span></button>
 </div></div></div>
 <div class="max-w-lg mx-auto px-4 pt-4">
+
+<!-- IMAGE SLIDER -->
+<div class="slider-container shadow-lg mb-5 anim-slide-up" id="imageSlider">
+<div class="slider-track" id="sliderTrack">
+<img src="https://i.ibb.co.com/Vcp1q131/file-000000005f387208aba93dd72ee6b941-4.jpg" alt="Slide 1">
+<img src="https://i.ibb.co.com/kdjGyRh/file-000000005f387208aba93dd72ee6b941-5.jpg" alt="Slide 2">
+<img src="https://i.ibb.co.com/Vcp1q131/file-000000005f387208aba93dd72ee6b941-4.jpg" alt="Slide 3">
+</div>
+<button class="slider-nav-btn prev" onclick="slideMove(-1)"><span class="iconify text-gray-700 text-lg" data-icon="solar:arrow-left-linear"></span></button>
+<button class="slider-nav-btn next" onclick="slideMove(1)"><span class="iconify text-gray-700 text-lg" data-icon="solar:arrow-right-linear"></span></button>
+<div class="slider-dots" id="sliderDots"></div>
+</div>
+
 <div class="relative bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 rounded-2xl p-5 mb-5 overflow-hidden anim-slide-up">
 <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
 <div class="relative z-10">
@@ -70,6 +95,7 @@
 <p class="text-white/80 text-xs mb-3">১৩টি বিষয় • ১০০+ অধ্যায় • বিশাল প্রশ্নব্যাংক</p>
 <button onclick="navTo('premium')" class="bg-white text-orange-600 font-semibold text-xs px-5 py-2 rounded-xl hover:shadow-lg transition">প্রিমিয়াম আনলক করুন →</button>
 </div></div>
+
 <div id="subjects-section">
 <div class="flex items-center justify-between mb-3">
 <h3 class="text-base font-bold text-gray-800">সকল বিষয়সমূহ</h3>
@@ -91,8 +117,51 @@
 <div class="mb-4">
 <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
 <span class="iconify text-orange-500" data-icon="solar:document-text-bold"></span>অধ্যায়ভিত্তিক কুইজ</h4>
-<div id="topicList" class="topic-scroll space-y-2 pb-4"></div>
-</div></div></div>
+<div id="topicList" class="space-y-2 pb-4"></div>
+</div>
+
+<!-- SUPPORT SECTION -->
+<div id="supportSection" class="bg-white rounded-2xl border border-gray-100 p-5 mb-5 shadow-sm">
+<h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+<span class="iconify text-orange-500 text-xl" data-icon="solar:chat-round-call-bold"></span>
+সাপোর্ট ও যোগাযোগ
+</h3>
+<p class="text-xs text-gray-400 mb-4">যেকোনো সমস্যায় আমাদের সাথে যোগাযোগ করুন</p>
+<div class="space-y-3">
+<a href="https://wa.me/8801799673217" target="_blank" class="flex items-center gap-3 p-3.5 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition">
+<div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center shrink-0">
+<span class="iconify text-white text-xl" data-icon="simple-icons:whatsapp"></span>
+</div>
+<div>
+<p class="text-sm font-bold text-gray-700">WhatsApp</p>
+<p class="text-xs text-gray-400">01799673217</p>
+</div>
+<span class="iconify text-gray-300 text-lg ml-auto" data-icon="solar:arrow-right-up-linear"></span>
+</a>
+<a href="https://www.facebook.com/share/1E84bHjZNg/" target="_blank" class="flex items-center gap-3 p-3.5 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition">
+<div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
+<span class="iconify text-white text-xl" data-icon="simple-icons:facebook"></span>
+</div>
+<div>
+<p class="text-sm font-bold text-gray-700">ফেসবুক পেজ</p>
+<p class="text-xs text-gray-400">CQuizo Official</p>
+</div>
+<span class="iconify text-gray-300 text-lg ml-auto" data-icon="solar:arrow-right-up-linear"></span>
+</a>
+<a href="mailto:informationmail365@gmail.com" class="flex items-center gap-3 p-3.5 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition">
+<div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center shrink-0">
+<span class="iconify text-white text-xl" data-icon="solar:letter-bold"></span>
+</div>
+<div>
+<p class="text-sm font-bold text-gray-700">ইমেইল</p>
+<p class="text-xs text-gray-400">informationmail365@gmail.com</p>
+</div>
+<span class="iconify text-gray-300 text-lg ml-auto" data-icon="solar:arrow-right-up-linear"></span>
+</a>
+</div>
+</div>
+
+</div></div>
 
 <!-- QUIZ -->
 <div id="page-quiz" class="page">
@@ -103,7 +172,7 @@
 <button onclick="confirmQuit()" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center"><span class="iconify text-gray-600 text-xl" data-icon="solar:close-circle-linear"></span></button>
 <div class="flex items-center gap-1.5 bg-orange-50 px-3 py-1.5 rounded-full">
 <span class="iconify text-orange-500 text-sm" data-icon="solar:clock-circle-linear"></span>
-<span id="quizTimer" class="text-sm font-bold text-orange-600 tabular-nums">10:00</span></div>
+<span id="quizTimer" class="text-sm font-bold text-orange-600 tabular-nums">১২০:০০</span></div>
 <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full">
 <span id="qNumber" class="text-sm font-bold text-gray-600">১/৫</span></div>
 </div></div></div>
@@ -235,25 +304,19 @@ function showToast(m,t){const e=document.getElementById('toast');e.textContent=m
 // === PREMIUM SYSTEM ===
 let isPremium = localStorage.getItem('cquizoPremium') === 'true';
 const ADMIN_WHATSAPP = '8801799673217';
-
-// অ্যাডমিন প্যানেল: এখানে ফোন নম্বর এবং পিন লিস্ট আপডেট করবেন
 const premiumNumbers = ["01724557225", "01941525900"]; 
 const premiumPins = ["123456", "777777","112233"]; 
 
-// Plan Selection Logic
 let selectedPlanName = '৬ মাস';
 let selectedPlanPrice = '২৪৯৳';
 
 function selectPlan(name, price, id) {
     selectedPlanName = name;
     selectedPlanPrice = price;
-    
-    // Remove active styles from all
     document.querySelectorAll('.pricing-card').forEach(card => {
         card.classList.remove('selected-plan', 'border-orange-500', 'shadow-md');
         card.classList.add('border-gray-100');
     });
-    // Add active style to selected
     const el = document.getElementById(id);
     el.classList.remove('border-gray-100');
     el.classList.add('selected-plan', 'border-orange-500', 'shadow-md');
@@ -270,16 +333,23 @@ function updateUI() {
     }
 }
 
-function loginAsGuest() {
-    isPremium = false;
-    localStorage.setItem('cquizoPremium', 'false');
-    updateUI();
-    document.getElementById('loginModal').style.display = 'none';
-    showToast('অতিথি হিসেবে লগইন হয়েছে। শুধুমাত্র ১ম অধ্যায় ফ্রি!', 'error');
+function showPremiumNoticeOnce() {
+    if (!localStorage.getItem('cquizoPremiumNoticeShown')) {
+        document.getElementById('premiumNoticeModal').classList.remove('hidden');
+        document.getElementById('premiumNoticeModal').classList.add('flex');
+        localStorage.setItem('cquizoPremiumNoticeShown', 'true');
+    } else {
+        showToast('এই অধ্যায়টি প্রিমিয়াম। আনলক করতে সাবস্ক্রিপশন নিন!', 'error');
+    }
 }
 
-function closeLoginModal() {
-    document.getElementById('loginModal').style.display = 'none';
+function closePremiumNotice() {
+    document.getElementById('premiumNoticeModal').classList.add('hidden');
+    document.getElementById('premiumNoticeModal').classList.remove('flex');
+}
+
+function goToPremiumFromNotice() {
+    closePremiumNotice();
     navTo('premium');
 }
 
@@ -287,23 +357,9 @@ function sendPaymentViaWhatsApp() {
     const phone = document.getElementById('payPhone').value.trim();
     const trx = document.getElementById('payTrx').value.trim();
     const pin = document.getElementById('payPin').value.trim();
-    
     if(!phone || !trx || !pin) return showToast('সকল তথ্য পূরণ করুন এবং প্ল্যান সিলেক্ট করুন', 'error');
     if(pin.length !== 6 || !/^\d+$/.test(pin)) return showToast('PIN অবশ্যই ৬ সংখ্যার হতে হবে!', 'error');
-
-    const text = `
-🌟 *CQuizo Premium Subscription* 🌟
-━━━━━━━━━━━━━━━━━━━━━
-📦 *Selected Plan:* ${selectedPlanName}
-💰 *Amount:* ${selectedPlanPrice}
-
-📱 *Mobile Number:* ${phone}
-🔑 *Transaction ID:* ${trx}
-🔐 *Activation PIN:* ${pin}
-━━━━━━━━━━━━━━━━━━━━━
-✅ I have sent the payment. Please activate my premium account.
-    `.trim();
-
+    const text = `🌟 *CQuizo Premium Subscription* 🌟\n━━━━━━━━━━━━━━━━━━━━━\n📦 *Selected Plan:* ${selectedPlanName}\n💰 *Amount:* ${selectedPlanPrice}\n\n📱 *Mobile Number:* ${phone}\n🔑 *Transaction ID:* ${trx}\n🔐 *Activation PIN:* ${pin}\n━━━━━━━━━━━━━━━━━━━━━\n✅ I have sent the payment. Please activate my premium account.`.trim();
     const url = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
     showToast('WhatsApp এ পাঠানো হচ্ছে...', 'success');
@@ -313,7 +369,6 @@ function activatePremium() {
     const phone = document.getElementById('actPhone').value.trim();
     const pin = document.getElementById('actPin').value.trim();
     if(!phone || !pin) return showToast('ফোন নম্বর ও PIN দিন', 'error');
-    
     if (premiumNumbers.includes(phone) && premiumPins.includes(pin)) {
         isPremium = true;
         localStorage.setItem('cquizoPremium', 'true');
@@ -324,6 +379,50 @@ function activatePremium() {
         showToast('ভুল তথ্য! আবার চেষ্টা করুন।', 'error');
     }
 }
+
+// === IMAGE SLIDER ===
+let currentSlide = 0;
+let slideInterval;
+const sliderTrack = document.getElementById('sliderTrack');
+const sliderDots = document.getElementById('sliderDots');
+const totalSlides = sliderTrack.children.length;
+
+function initSlider() {
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+        dot.onclick = () => goToSlide(i);
+        sliderDots.appendChild(dot);
+    }
+    slideInterval = setInterval(() => slideMove(1), 3500);
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+    document.querySelectorAll('.slider-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === currentSlide);
+    });
+}
+
+function slideMove(dir) {
+    currentSlide = (currentSlide + dir + totalSlides) % totalSlides;
+    goToSlide(currentSlide);
+    clearInterval(slideInterval);
+    slideInterval = setInterval(() => slideMove(1), 3500);
+}
+
+let touchStartX = 0;
+let touchEndX = 0;
+const sliderEl = document.getElementById('imageSlider');
+sliderEl.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+sliderEl.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 40) { slideMove(diff > 0 ? 1 : -1); }
+}, {passive: true});
+
+initSlider();
 
 // === NAVIGATION ===
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');window.scrollTo(0,0)}
@@ -364,7 +463,7 @@ acc1:[{cat:'', items:[{id:'acc1_ch1',name:'হিসাববিজ্ঞান 
 acc2:[{cat:'', items:[{id:'acc2_ch1',name:'অব্যবসায়ী প্রতিষ্ঠানের হিসাব'},{id:'acc2_ch2',name:'অংশীদারি ব্যবসায়ের হিসাব'},{id:'acc2_ch3',name:'নগদ প্রবাহ বিবরণী'},{id:'acc2_ch4',name:'যৌথ মূলধনী কোম্পানির মূলধন'},{id:'acc2_ch5',name:'যৌথ মূলধনী কোম্পানির আর্থিক বিবরণী'},{id:'acc2_ch6',name:'আর্থিক বিবরণী বিশ্লেষণ'},{id:'acc2_ch7',name:'উৎপাদন ব্যয় হিসাব'},{id:'acc2_ch8',name:'মজুত পণ্যের হিসাবরক্ষণ পদ্ধতি'},{id:'acc2_ch9',name:'ব্যয় ও ব্যয়ের শ্রেণিবিভাগ'},{id:'acc2_ch10',name:'ব্যবস্থাপনা হিসাববিজ্ঞান পরিচিতি'}]}],
 fin1:[{cat:'', items:[{id:'fin1_ch1',name:'অর্থায়নের সূচনা'},{id:'fin1_ch2',name:'আর্থিক বাজারের আইনগত দিকসমূহ'},{id:'fin1_ch3',name:'অর্থের সময়মূল্য'},{id:'fin1_ch4',name:'আর্থিক বিশ্লেষণ'},{id:'fin1_ch5',name:'স্বল্পও মধ্যমেয়াদী অর্থায়ন'},{id:'fin1_ch6',name:'অর্থায়নের উৎস : দীর্ঘমেয়াদী অর্থায়ন'},{id:'fin1_ch7',name:'মূলধন ব্যয়'},{id:'fin1_ch8',name:'মূলধন বাজেটিং ও বিনিয়োগ সিদ্ধান্ত'},{id:'fin1_ch9',name:'ঝুঁকি ও মুনাফার হার'}]}],
 fin2:[{cat:'', items:[{id:'fin2_ch1',name:'ব্যাংক ব্যবস্থার প্রাথমিক ধারণা'},{id:'fin2_ch2',name:'কেন্দ্রীয় ব্যাংক'},{id:'fin2_ch3',name:'বাণিজ্যিক ব্যাংক'},{id:'fin2_ch4',name:'ব্যাংক হিসাব'},{id:'fin2_ch5',name:'হস্তান্তরযোগ্য ঋণের দলিল'},{id:'fin2_ch6',name:'চেক, বিনিময় বিল ও প্রতিশ্রুতিপত্র'},{id:'fin2_ch7',name:'ব্যাংক তহবিলের উৎস ও ব্যবহার'},{id:'fin2_ch8',name:'বৈদেশিক বিনিময় ও বৈদেশিক মুদ্রা'},{id:'fin2_ch9',name:'ইলেকট্রনিক ও আধুনিক ব্যাংকিং'},{id:'fin2_ch10',name:'বিমা সম্পর্কে মৌলিক ধারণা'},{id:'fin2_ch11',name:'জীবন বিমা'},{id:'fin2_ch12',name:'নৌ-বিমা'},{id:'fin2_ch13',name:'অগ্নি বিমা'},{id:'fin2_ch14',name:'বিবিধ বিমা'}]}],
-mgt1:[{cat:'', items:[{id:'mgt1_ch1',name:'ব্যবসায়ের মৌলিক ধারণা'},{id:'mgt1_ch2',name:'ব্যবসায় পরিবেশ'},{id:'mgt1_ch3',name:'একমালিকানা ব্যবসায়'},{id:'mgt1_ch4',name:'অংশীদারি ব্যবসায়'},{id:'mgt1_ch5',name:'যৌথ মূলধনী ব্যবসায়'},{id:'mgt1_ch6',name:'সমবায় সমিতি'},{id:'mgt1_ch7',name:'রাষ্ট্রীয় ব্যবসায়'},{id:'mgt1_ch8',name:'ব্যবসায়ের আইনগত দিক'},{id:'mgt1_ch9',name:'ব্যবসায় সহায়ক সেবা'},{id:'mgt1_ch10',name:'ব্যবসায় উদ্যোগ'},{id:'mgt1',name:'ব্যবসায় সহায়ক সেবা'},{id:'mgt1_ch10',name:'ব্যবসায় উদ্যোগ'},{id:'mgt1_ch11',name:'ব্যবসায়ে তথ্য ও যোগাযোগ প্রযুক্তির ব্যবহার'},{id:'mgt1_ch12',name:'ব্যবসায় নৈতিকতা ও সামাজিক দায়বদ্ধতা'}]}],
+mgt1:[{cat:'', items:[{id:'mgt1_ch1',name:'ব্যবসায়ের মৌলিক ধারণা'},{id:'mgt1_ch2',name:'ব্যবসায় পরিবেশ'},{id:'mgt1_ch3',name:'একমালিকানা ব্যবসায়'},{id:'mgt1_ch4',name:'অংশীদারি ব্যবসায়'},{id:'mgt1_ch5',name:'যৌথ মূলধনী ব্যবসায়'},{id:'mgt1_ch6',name:'সমবায় সমিতি'},{id:'mgt1_ch7',name:'রাষ্ট্রীয় ব্যবসায়'},{id:'mgt1_ch8',name:'ব্যবসায়ের আইনগত দিক'},{id:'mgt1_ch9',name:'ব্যবসায় সহায়ক সেবা'},{id:'mgt1_ch10',name:'ব্যবসায় উদ্যোগ'},{id:'mgt1_ch11',name:'ব্যবসায়ে তথ্য ও যোগাযোগ প্রযুক্তির ব্যবহার'},{id:'mgt1_ch12',name:'ব্যবসায় নৈতিকতা ও সামাজিক দায়বদ্ধতা'}]}],
 mgt2:[{cat:'', items:[{id:'mgt2_ch1',name:'ব্যবস্থাপনার ধারণা'},{id:'mgt2_ch2',name:'ব্যবস্থাপনার নীতি'},{id:'mgt2_ch3',name:'পরিকল্পনা'},{id:'mgt2_ch4',name:'সংগঠিতকরণ'},{id:'mgt2_ch5',name:'কর্মীসংস্থান'},{id:'mgt2_ch6',name:'নেতৃত্ব'},{id:'mgt2_ch7',name:'প্রেষণা'},{id:'mgt2_ch8',name:'যোগাযোগ'},{id:'mgt2_ch9',name:'সমন্বয় সাধন'},{id:'mgt2_ch10',name:'নিয়ন্ত্রণ'}]}],
 prod1:[{cat:'', items:[{id:'prod1_ch1',name:'উৎপাদন'},{id:'prod1_ch2',name:'উৎপাদনের উপকরণ'},{id:'prod1_ch3',name:'উৎপাদনের মাত্রা'},{id:'prod1_ch4',name:'সামষ্টিক পর্যায় উৎপাদন'},{id:'prod1_ch5',name:'উৎপাদন ব্যবস্থাপনা'},{id:'prod1_ch6',name:'পণ্য ডিজাইন'},{id:'prod1_ch7',name:'মান ব্যবস্থাপনা'},{id:'prod1_ch8',name:'উৎপাদন ক্ষমতা'},{id:'prod1_ch9',name:'ব্যবসায়ের অবস্থান'},{id:'prod1_ch10',name:'লে আউট/বিন্যাস'}]}],
 prod2:[{cat:'', items:[{id:'prod2_ch1',name:'বিপণন পরিচিতি'},{id:'prod2_ch2',name:'বিপণন পরিবেশ'},{id:'prod2_ch3',name:'বিপণন কার্যাবলী'},{id:'prod2_ch4',name:'বাজার বিভক্তিকরণ ও বিপণন মিশ্রণ'},{id:'prod2_ch5',name:'পণ্য ও পণ্যের মূল্য নির্ধারণ'},{id:'prod2_ch6',name:'পণ্য বণ্টন প্রণালী'},{id:'prod2_ch7',name:'পাইকারি ও খুচরা ব্যবসায়'},{id:'prod2_ch8',name:'বিক্রয় প্রসার ও বিজ্ঞাপন'},{id:'prod2_ch9',name:'ব্যক্তিক বিক্রয় ও বিক্রয়িকতা'},{id:'prod2_ch10',name:'বিপণনের সমসাময়িক বিষয়াবলি'}]}],
@@ -382,7 +481,7 @@ const QB={
 'ban1_ch8': [{ q: "'মানব কল্যাণ' প্রবন্ধের মূল বার্তা কী?", opts: ['ব্যক্তিগত উন্নতি', 'সমাজ সেবা', 'সামাজিক কল্যাণ', 'ধর্মীয় উপদেশ'], correct: 2 }],
 'ban1_ch9': [{ q: "'গন্তব্য কাবুল' রচনাটি কোন দেশের প্রেক্ষাপটে লেখা?", opts: ['পাকিস্তান', 'আফগানিস্তান', 'ভারত', 'ইরান'], correct: 1 }],
 'ban1_ch10': [{ q: "'মাসি-পিশি' গল্পের পটভূমি কী?", opts: ['গ্রামবাংলা', 'কলকাতা শহর', 'পাহাড়ি এলাকা', 'সমুদ্রতীর'], correct: 0 }],
-'ban1_ch11': [{ q: "কপিলদাস মুর্মু কোন সম্প্রদায়ভুক্ত মানুষ?", opts: ['সাঁওতাল', 'ওঁরাও', 'মুণ্ডা', 'খাসিয়া'], correct: 0 }],
+'ban1_ch11': [{ q: 'কপিলদাস মুর্মু কোন সম্প্রদায়ভুক্ত মানুষ?', opts: ['সাঁওতাল', 'ওঁরাও', 'মুণ্ডা', 'খাসিয়া'], correct: 0 }],
 'ban1_ch12': [{ q: "'রেইনকোট' গল্পে মূল আবেগ কোনটি?", opts: ['ক্ষোভ', 'হাসি', 'নস্টালজিয়া', 'ভয়'], correct: 2 }],
 'ban1_ch13': [{ q: "'নেকলেস' গল্পটি কোন ভাষা থেকে অনূদিত?", opts: ['ফরাসি', 'ইংরেজি', 'রুশ', 'জার্মান'], correct: 0 }],
 'ban1_ch14': [{ q: "'ঋতুবর্ণন' কবিতায় কোন ঋতুর বর্ণনা আছে?", opts: ['বসন্ত', 'বর্ষা', 'শরৎ', 'হেমন্ত'], correct: 0 }],
@@ -455,7 +554,242 @@ const QB={
 'eng2_ch27': [{ q: '"Doctor : Hospital :: Teacher : ?" Find the analogy.', opts: ['Education', 'School', 'Student', 'Book'], correct: 1 }],
 'eng2_ch28': [{ q: '"Look before you leap" এর বাংলা অনুবাদ কী?', opts: ['ঝাঁপ দাও', 'চিন্তা করে কাজ করো', 'দেখো তারপর যাও', 'পা দেখে মাপো'], correct: 1 }],
 'eng2_ch29': [{ q: 'Textbook comprehension tests your:', opts: ['Writing skill', 'Reading skill', 'Speaking skill', 'Listening skill'], correct: 1 }],
-'ict_ch1': [{ q: 'তথ্য ও যোগাযোগ প্রযুক্তির সংক্ষিপ্ত রূপ কী?', opts: ['ICT', 'ITC', 'CIT', 'TIC'], correct: 0 }],
+'ict_ch1': [{ q: 'তথ্য ও যোগাযোগ প্রযুক্তির সংক্ষিপ্ত রূপ কী?', opts: ['ICT', 'ITC', 'CIT', 'TIC'], correct: 0 },
+{ q: 'তথ্য ও যোগাযোগ প্রযুক্তির বিকাশে কোনটির অবদান সবচেয়ে বেশি?', opts: ['রেডিও', 'টেলিফোন', 'টেলিভিশন', 'কম্পিউটার'], correct: 3 },
+{ q: 'টেলিযোগাযোগের মাধ্যমে সভা করাকে কী বলা হয়?', opts: ['টেলিকনফারেন্স', 'টেলিকমিউনিকেশন', 'ভিডিও কনফারেন্স', 'ভিডিও চ্যাটিং'], correct: 0 },
+{ q: 'কম্পিউটার সংশ্লিষ্ট যন্ত্রপাতিকে সঠিকভাবে পরিচালনার জন্য নিচের কোনটি প্রয়োজন?', opts: ['হার্ডওয়্যার', 'সফটওয়্যার', 'ইন্টারনেট', 'মানুষের জ্ঞান'], correct: 1 },
+{ q: 'রোগী দূরের ডাক্তারের কাছ থেকে সেবা পেতে পারে কোনটির মাধ্যমে?', opts: ['ভিডিও কনফারেন্স', 'অনলাইন চ্যাটিং', 'টেলিকনফারেন্স', 'ভয়েস কল'], correct: 0 },
+{ q: 'সাম্প্রতিক সময়ে কোনটির ব্যাপক প্রসার ঘটেছে?', opts: ['টেলিভিশন', 'ইন্টারনেট', 'কম্পিউটার', 'মোবাইল'], correct: 1 },
+{ q: 'তথ্য প্রযুক্তি বলতে মূলত কী বোঝায়?', opts: ['তথ্য রাখা ও ব্যবহার করার প্রযুক্তি', 'তথ্য বিক্রির প্রযুক্তি', 'তথ্য বিকৃতির প্রযুক্তি', 'শুধুমাত্র তথ্য সংরক্ষণ করার প্রযুক্তি'], correct: 0 },
+{ q: 'কোনটি আবিষ্কারের ফলে যোগাযোগ ব্যবস্থার প্রভূত উন্নতি হয়?', opts: ['কম্পিউটার', 'টেলিফোন', 'প্রিন্টার', 'টেলিগ্রাফ'], correct: 0 },
+{ q: 'তথ্য ও যোগাযোগ প্রযুক্তি—\ni. অপচয় কমায়\nii. শারীরিক শ্রম বাড়ায়\niii. ব্যয় বৃদ্ধি পায়', opts: ['i', 'ii', 'iii', 'i, ii ও iii'], correct: 0 }, // উদ্দীপক ও বিকল্প অনুসারে শুধু i সঠিক
+{ q: 'ভিডিও কনফারেন্সিং ব্যবস্থায় অংশগ্রহণকারীরা—\ni. একে অপরের ছবি দেখতে পারে\nii. প্রত্যেকে প্রত্যেকের কথোপকথন শুনতে পায়\niii. নিজেদের মধ্যে চিঠিপত্র আদান-প্রদান করতে পারে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'চাকরিজীবীদের কাছে ইন্টারনেট ব্যবস্থা জনপ্রিয়, কারণ এ পদ্ধতিতে—\ni. যাতায়াত খরচ কম হয়\nii. অতিরিক্ত উপার্জন করা যায়\niii. সময়ের সাশ্রয় হয়', opts: ['ii ও iii', 'i ও iii', 'i ও ii', 'i, ii ও iii'], correct: 3 },
+{ q: 'আরমান মায়ের অনুরোধ পূরণে কোন ব্যবস্থা গ্রহণ করবে? (উদ্দীপক ভিত্তিক)', opts: ['টেলিকনফারেন্সিং', 'ই-মেইল', 'ফ্যাক্স', 'ভিডিও কনফারেন্সিং'], correct: 3 },
+{ q: 'আরমানের মায়ের জন্য তার মেয়ে ও নাতির সাথে যোগাযোগের সহজ উপায় হতে পারে—\ni. ফেসবুক\nii. বিং\niii. স্কাইপি', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'বিশ্বগ্রাম ধারণার প্রবক্তা কে?', opts: ['মার্শাল ম্যাকলুহান', 'টিম বার্নার্স লি', 'মার্ক জুকারবার্গ', 'ই এফ কড'], correct: 0 },
+{ q: 'ইন্টারনেটের মাধ্যমে ঘরে বসে কর্মসংস্থানের সুযোগকে কি বলা হয়?', opts: ['ই-কমার্স', 'ই-মার্কেটিং', 'ই-বিজনেস', 'আউটসোর্সিং'], correct: 3 },
+{ q: 'ফ্রিল্যান্সিং কী?', opts: ['দীর্ঘ মেয়াদি চুক্তিতে কাজ করা', 'নিয়মমাফিক ১০টা-৫টা অফিস করা', 'স্বাধীনভাবে যে কোনো ব্যক্তি বা প্রতিষ্ঠানে কাজ করা', 'সুনির্দিষ্ট কাজের লাইসেন্স নিয়ে কাজ করা'], correct: 2 },
+{ q: 'গ্লোবাল ভিলেজ প্রতিষ্ঠার ক্ষেত্রে নিচের কোন উপাদানটির ভূমিকা সবচেয়ে বেশি?', opts: ['ইন্টারনেট', 'রেডিও', 'টেলিভিশন', 'টেলিফোন'], correct: 0 },
+{ q: 'বিশ্বগ্রাম ধারণার সাথে কোন বিষয়টি বিশেষভাবে সম্পৃক্ত?', opts: ['গ্রামের সাথে শহরের সহজ যোগাযোগ', 'ইন্টারনেট সুবিধার ব্যাপক প্রসার', 'বিশ্বব্যাপী গ্রামকে নগরে পরিবর্তন', 'শিক্ষার অবাধ সুযোগ সুবিধার বিস্তার'], correct: 1 },
+{ q: 'কোনো বিজ্ঞাপন বিশ্বব্যাপী ছড়িয়ে দিতে হলে কী করতে হবে?', opts: ['সাইনবোর্ডে টাঙাতে হবে', 'পত্রিকায় দিতে হবে', 'ওয়েবসাইটে দিতে হবে', 'রেডিওতে প্রচার করতে হবে'], correct: 2 },
+{ q: 'হারবার্ট মার্শাল ম্যাকলুহান নিচের কোন দেশটির অধিবাসী ছিলেন?', opts: ['জার্মানি', 'ফ্রান্স', 'গ্রিস', 'কানাডা'], correct: 3 },
+{ q: 'বিশ্বগ্রামের মেরুদণ্ড কোনটি?', opts: ['হার্ডওয়্যার', 'সফটওয়্যার', 'কানেক্টিভিটি', 'ডেটা'], correct: 2 },
+{ q: 'কোনটির মাধ্যমে এক দেশের লোক অন্য দেশের লোকের সাথে ভিডিও চ্যাট করেন?', opts: ['স্কাইপি', 'মাই স্পেস', 'টুইটার', 'ইউটিউব'], correct: 0 },
+{ q: 'অনলাইনের মাধ্যমে ব্যবসায়-বাণিজ্য করাকে বলা হয় —', opts: ['ই-মেইল', 'ই-বুক', 'ই-গভর্নেন্স', 'ই-কমার্স'], correct: 3 },
+{ q: 'www.khanacademy.org কী সংক্রান্ত ওয়েবসাইট?', opts: ['চিকিৎসা সংক্রান্ত ওয়েবসাইট', 'বিনোদন সংক্রান্ত ওয়েবসাইট', 'ব্যবসায় সংক্রান্ত ওয়েবসাইট', 'শিক্ষা সংক্রান্ত ওয়েবসাইট'], correct: 3 },
+{ q: 'আউটসোর্সিং কী?', opts: ['নির্দিষ্ট শ্রমঘণ্টায় কাজ করা', 'ইন্টারনেটভিত্তিক কাজ', 'বিশেষ ব্রাউজিং সুবিধা', 'বিশ্বব্যাপী নেটওয়ার্ক ব্যবস্থা'], correct: 1 },
+{ q: 'কোনটির কল্যাণে ঘরে বসেই বিশ্বকে হাতের মুঠোয় পাওয়া যাচ্ছে?', opts: ['ইন্টারনেট', 'টেলিভিশন', 'টেলিফোন', 'মোবাইল ফোন'], correct: 0 },
+{ q: 'দূরবর্তী কোনো ব্যক্তির সাথে যোগাযোগের সময় কোনটি থাকা প্রয়োজন হয়?', opts: ['ইন্টারনেট', 'ক্রায়োসার্জারি', 'গ্লোবাল ভিলেজ', 'ভার্চুয়াল রিয়েলিটি'], correct: 0 },
+{ q: 'বহুল ব্যবহৃত সামাজিক যোগাযোগ মাধ্যম কোনটি?', opts: ['facebook', 'my space', 'Twitter', 'Yahoo'], correct: 0 },
+{ q: 'দেশের অর্থনীতিকে সচল ও বেগবান করার ক্ষেত্রে নিচের কোনটি নতুন মাত্রা যুক্ত করেছে?', opts: ['ফেসবুক', 'আউটসোর্সিং', 'গুগল', 'সংবাদপত্র'], correct: 1 },
+{ q: 'অর্থ প্রেরণ ও গ্রহণের ক্ষেত্রে নিচের কোনটি নির্ভরযোগ্য মাধ্যমে পরিণত হয়েছে?', opts: ['মোবাইল ব্যাংকিং', 'কুরিয়ার সার্ভিস', 'তফসিলি ব্যাংক', 'পোস্ট অফিস'], correct: 0 },
+{ q: 'ই-কমার্স এর অন্তর্ভুক্ত নয়—', opts: ['বিপণন', 'সরবরাহ', 'লেনদেন', 'প্রচার'], correct: 3 }, // বইয়ের কিছু সংস্করণে প্রচার বা অন্যান্য অপশন থাকতে পারে, ছবি অনুযায়ী 'ঘ' দাগানো।
+{ q: 'কোনটি আউটসোর্সিং-এর মার্কেট প্লেস?', opts: ['টুইটার', 'মাইস্পেস', 'ওডেক্স (আপওয়ার্ক)', 'ডিগ'], correct: 2 },
+{ q: 'কোন উপাদানটি Global village এর ক্ষেত্রে সবচেয়ে গুরুত্বপূর্ণ?', opts: ['ইন্টারনেট', 'সংবাদপত্র', 'টেলিভিশন', 'মোবাইল'], correct: 0 },
+{ q: 'ইন্টারনেটের মাধ্যমে ব্যবসায় পরিচালনা করাকে কী বলে?', opts: ['ই-মেইল', 'ই-কমার্স', 'ই-ট্রেড', 'ই-গভর্নেন্স'], correct: 1 },
+{ q: 'ইন্টারনেট ব্যবহার করে কর্মসংস্থানের সুযোগকে কী বলা হয়?', opts: ['ই-কমার্স', 'আউটসোর্সিং', 'ই-বিজনেস', 'ই-গভর্নেন্স'], correct: 1 },
+{ q: 'অনলাইনের মাধ্যমে দরপত্র আহ্বান করাকে কী বলে?', opts: ['ই-কমার্স', 'ই-মেইল', 'ই-টেন্ডার', 'ই-পোস্ট'], correct: 2 },
+{ q: 'ই-কমার্সের সুবিধা কোনটি?', opts: ['বিজ্ঞাপন ও বিপণন', 'আইন প্রণয়ন ও প্রয়োগ', 'লেনদেনের নিরাপত্তা', 'পণ্যের গুণগত মান যাচাই'], correct: 0 },
+{ q: 'বিশ্বগ্রাম বলতে বোঝায়—\ni. রিয়েল টাইম সেবা বিনিময়\nii. তথ্য ও বিনোদনের সহজলভ্যতা\niii. বিশ্বের গ্রামসমূহের আন্তঃসম্পর্ক', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'হারবার্ট মার্শাল ম্যাকলুহান-এর বিখ্যাত গ্রন্থের নাম হলো—\ni. The Gutenberg Galaxy: The Making of Typographic Man\nii. Understanding Media\niii. The C Programming Language', opts: ['ii', 'iii', 'i ও ii', 'i ও iii'], correct: 2 },
+{ q: 'বিশ্বগ্রাম প্রতিষ্ঠার প্রয়োজনীয় উপাদান হলো—\ni. কানেক্টিভিটি\nii. ডেটা\niii. সক্ষমতা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'টেলিমেডিসিন সেবার জন্য আবশ্যক—\ni. বিশেষজ্ঞ চিকিৎসক\nii. রোগ নির্ণয় কেন্দ্র\niii. বিশেষায়িত নেটওয়ার্ক', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'দূরশিক্ষণ শিক্ষা ব্যবস্থার মাধ্যমে ছাত্র-ছাত্রীরা—\ni. বাড়ির কাজ ইন্টারনেটের সহায়তায় জমা দিতে পারবে\nii. বিভিন্ন রকম অনলাইন পরীক্ষায় অংশগ্রহণ করতে পারবে\niii. শিক্ষকের লেকচার নোটগুলো ওয়েবসাইটে দেখতে পারবে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'অনলাইন শিক্ষা ব্যবস্থায় লাইভ শ্রেণিতে শিক্ষাদানের ক্ষেত্রে লেকচারসমূহ প্রচার করা যেতে পারে—\ni. টেলিভিশনের মাধ্যমে\nii. ফ্যাক্স মেশিনের মাধ্যমে\niii. মোবাইল ফোনের মাধ্যমে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'আমাদের দেশে প্রচলিত শিক্ষা ব্যবস্থার পাশাপাশি নতুন শিক্ষাব্যবস্থা হচ্ছে—\ni. ওয়েবভিত্তিক\nii. ইন্টারনেটভিত্তিক\niii. মাল্টিমিডিয়াভিত্তিক', opts: ['i', 'i ও ii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'E-commerce-এর ক্ষেত্রে ব্যবহৃত হয়—\ni. ক্রেডিট কার্ড\nii. ডেবিট কার্ড\niii. আইডেন্টিটি কার্ড', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'বিশ্বগ্রাম ধারণার প্রেক্ষাপটে যেকোনো সভা অফিসে করতে হলে প্রয়োজন হবে—\ni. ভিডিও কনফারেন্সিং সফটওয়্যার\nii. অডিও কনফারেন্সিং সফটওয়্যার\niii. সিমুলেশন সফটওয়্যার', opts: ['ii', 'iii', 'i ও ii', 'i ও iii'], correct: 2 },
+{ q: 'কর্মস্থলের জন্য বর্তমানে—\ni. ঘরে বসেই কাজ পাওয়া যায়\nii. ইন্টারনেট সুবিধা নেওয়া যায়\niii. বিভিন্ন ওয়েব সুবিধা পাওয়া যায়', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'উদ্দীপকের প্রযুক্তি দাপ্তরিক কার্যক্রম ব্যতীত আর যে ক্ষেত্রে ব্যবহৃত হয় তা হলো— (মইন সাহেবের উদ্দীপক)\ni. শিক্ষা ক্ষেত্রে\nii. গোয়েন্দা নজরদারীতে\niii. সামাজিক যোগাযোগ', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'মইন সাহেবের তথ্য ও প্রযুক্তি ব্যবহার কোন ধরনের কর্মকাণ্ড? (মইন সাহেবের উদ্দীপক)\ni. ইতিবাচক\nii. কার্যকারী\niii. সময়োপযোগী', opts: ['i', 'i ও ii', 'i ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'শরীফের খবরটি পাঠানো হয়েছিল যেভাবে— (শরীফের উদ্দীপক)', opts: ['ফ্যাক্স', 'এসএমএস', 'পোস্টাল', 'এমএমএস'], correct: 1 },
+{ q: 'শরীফ তার ব্যবহৃত প্রযুক্তির সাহায্যে যে সকল সুবিধা নিতে পারে— (শরীফের উদ্দীপক)\ni. অন-লাইন ব্যাংকিং\nii. আউটসোর্সিং\niii. ভার্চুয়াল ড্রাইভিং', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+
+
+{ q: 'বাস্তব নয়, কিন্তু বাস্তবের চেতনা উদ্রেককারী বিজ্ঞাননির্ভর কল্পনাকে কী বলে?', opts: ['ভার্চুয়াল রিয়েলিটি', 'ভার্চুয়াল ফাংশন', 'ভার্চুয়াল পাস্ট', 'ভার্চুয়ালিটি'], correct: 0 },
+{ q: 'কোন তত্ত্বের উপর ভার্চুয়াল রিয়েলিটি প্রতিষ্ঠিত?', opts: ['মরগানতত্ত্ব', 'সিমুলেশন তত্ত্ব', 'কম্পিউটারতত্ত্ব', 'ভার্চুয়াল তত্ত্ব'], correct: 1 },
+{ q: 'ভার্চুয়াল রিয়েলিটির বৈশিষ্ট্য কোনটি?', opts: ['তথ্য আদান-প্রদান', 'বাস্তব জগতে বিচরণ', 'দ্বিমাত্রিক জগতে প্রবেশ', 'কাল্পনিক জগতে বিচরণ'], correct: 3 },
+{ q: 'ভার্চুয়াল রিয়েলিটির জন্য হাতে যে জিনিসটি পরতে হয় তা হলো—', opts: ['HMD', 'Data glove', 'Body Suit', 'Head set'], correct: 1 },
+{ q: 'সাধারণভাবে ভার্চুয়াল রিয়েলিটির পরিবেশ হলো—', opts: ['একমাত্রিক', 'দ্বি-মাত্রিক', 'ত্রিমাত্রিক', 'চতুর্থুমাত্রিক'], correct: 2 },
+{ q: 'কম্পিউটার সিমুলেশন প্রয়োগের ক্ষেত্র কোনটি?', opts: ['ক্রায়োসার্জারি', 'ভার্চুয়াল রিয়েলিটি', 'ইন্টারনেট', 'ভিডিও কনফারেন্সিং'], correct: 1 },
+{ q: 'কোনটি ভার্চুয়াল রিয়েলিটিতে ব্যবহৃত হয়?', opts: ['ত্রিমাত্রিক সিমুলেশন', 'দ্বিমাত্রিক সিমুলেশন', 'হ্যান্ড জিওমেট্রি', 'বায়োলজিক্যাল ডেটা'], correct: 0 },
+{ q: 'সিমুলেশনে যখন কোনো কিছুর শারীরিক উপস্থিতির আবহ প্রদান করা হয় তখন তাকে কী বলে?', opts: ['ভার্চুয়াল ভিলেজ', 'ভার্চুয়াল হাউজ', 'ভার্চুয়াল সোসাইটি', 'ভার্চুয়াল রিয়েলিটি'], correct: 3 },
+{ q: 'নিচের কোনটি ভার্চুয়াল রিয়েলিটি তৈরি করে?', opts: ['বাস্তবভাবে কৃত্রিম জগৎ', 'কৃত্রিমভাবে বাস্তব জগৎ', 'বাস্তবভাবে কাল্পনিক জগৎ', 'কাল্পনিকভাবে কৃত্রিম জগৎ'], correct: 1 },
+{ q: 'ভার্চুয়াল রিয়েলিটিতে ছবিগুলোকে জীবন্ত দেখানোর জন্য কোন প্রযুক্তি ব্যবহার করা হয়?', opts: ['ত্রিমাত্রিক', 'দ্বিমাত্রিক', 'একমাত্রিক', 'চতুর্থমাত্রিক'], correct: 0 },
+{ q: 'ভার্চুয়াল রিয়েলিটির সাহায্যে সামরিক প্রশিক্ষণের সময়—', opts: ['প্রাণহানির আশঙ্কা কমে যায়', 'প্রাণহানির কোনো আশঙ্কা থাকে না', 'প্রাণহানির আশঙ্কা বৃদ্ধি পায়', 'প্রাণহানি হওয়া-না হওয়ার আশঙ্কা সমান'], correct: 1 },
+{ q: 'বিশেষ হেলমেট, বিশেষ গ্লোভস ও পায়ে বিশেষ যন্ত্রপাতিসম্পন্ন জুতো পরতে হয়—\ni. ভার্চুয়াল রিয়েলিটি নিয়ন্ত্রিত পরিবেশ উপলব্ধি করতে\nii. ভার্চুয়াল রিয়েলিটির অনুভূতি রপ্ত করতে\niii. ভার্চুয়াল রিয়েলিটির ঝুঁকি হতে মুক্ত থাকতে', opts: ['i', 'iii', 'i ও ii', 'i ও iii'], correct: 2 },
+{ q: 'ভার্চুয়াল রিয়েলিটি ব্যবহারের ফলে মানুষ—\ni. কানে কম শুনতে পারে\nii. বাস্তবতা বিবর্জিত হয়ে উঠতে পারে\niii. মনুষ্যত্ব হারিয়ে ফেলতে পারে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 }, // ছবি অনুযায়ী 'ক' বা 'খ' দাগানো স্পষ্ট নয়, তবে সাধারণত i ও ii বেশি প্রাসঙ্গিক
+{ q: 'ভার্চুয়াল রিয়েলিটির প্রভাব রয়েছে—\ni. সামরিক ক্ষেত্রে\nii. প্রশিক্ষণে\niii. শিক্ষা ক্ষেত্রে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'দুর্ঘটনায় নিহত যাত্রীদের শনাক্তকরণের জন্য ব্যবহৃত প্রযুক্তি হতে পারে—', opts: ['Finger Print', 'Hand Geometry', 'Retina Scan', 'DNA Analysis'], correct: 3 },
+{ q: 'মি. \'ক\' এর প্রশিক্ষণে ব্যবহৃত প্রযুক্তিটি ব্যবহৃত হতে পারে—\ni. চিকিৎসাবিদ্যার শিক্ষার্থীদের হৃদপিণ্ডের কার্যকারিতা বুঝানোর ক্ষেত্রে\nii. প্রকৌশল বিদ্যার শিক্ষার্থীদের ঝুঁকিপূর্ণ কাজের প্রশিক্ষণ প্রদানে\niii. পুলিশ বাহিনীকে ট্রাফিক ব্যবস্থাপনা প্রশিক্ষণের ক্ষেত্রে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'বিলুর হাতে পানির অনুভূতি সৃষ্টি করছে নিচের কোনটি? (উদ্দীপক ভিত্তিক)', opts: ['ডেটা ইনপুট', 'ডেটা প্রসেস', 'ডেটা ডিভাইস', 'বিশেষ ধরনের চশমা'], correct: 1 }, // ছবি অনুযায়ী খ দাগানো
+{ q: 'বিলু সমুদ্র সৈকত ভ্রমণের শারীরিক অভিজ্ঞতা লাভ করেছে, কেননা বিলুর মামা ভার্চুয়াল রিয়েলিটি ব্যবহার করে—\ni. সমুদ্র সৈকতের একটি সিমুলেশন তৈরি করেছেন\nii. বিভিন্ন সেন্সরের সাহায্যে তার অনুভূতিকে নিয়ন্ত্রণ করেছেন\niii. বাস্তবে কক্সবাজারে নিয়ে গেছেন', opts: ['i', 'i ও ii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'মানুষের চিন্তা ভাবনাকে যন্ত্রের মাধ্যমে প্রকাশ করার প্রযুক্তি কোনটি?', opts: ['বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'কৃত্রিম বুদ্ধিমত্তা', 'ভার্চুয়াল রিয়েলিটি'], correct: 2 },
+{ q: 'কৃত্রিম বুদ্ধিমত্তা সংযোজন করা হয়েছে কোন প্রজন্মের কম্পিউটারে?', opts: ['পঞ্চম', 'চতুর্থ', 'তৃতীয়', 'ষষ্ঠ'], correct: 0 },
+{ q: 'কৃত্রিম বুদ্ধিমত্তা প্রধানত কোথায় ব্যবহৃত হয়?', opts: ['বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'রোবোটিক্স', 'ন্যানোটেকনোলজি'], correct: 2 },
+{ q: 'Artificial Intelligence পদ্ধতির সাথে সর্বপ্রথম সকলকে পরিচয় করিয়ে দেন কে?', opts: ['Jack Williamson', 'Marshall Mcluhan', 'John McCarthy', 'Karel Capek'], correct: 2 },
+{ q: 'এক্সপার্ট সিস্টেম কী?', opts: ['অ্যাপ্লিকেশন', 'যন্ত্র', 'রোবট', 'নিউরল নেটওয়ার্ক'], correct: 0 },
+{ q: 'নিচের কোনটি কম্পিউটারের নেই?', opts: ['নিজস্ব বুদ্ধি', 'তথ্য সমাহার', 'সফটওয়্যার', 'কী-বোর্ড'], correct: 0 },
+{ q: 'কৃত্রিম বুদ্ধিমত্তার ব্যবহারিক ক্ষেত্রসমূহ—\ni. এক্সপার্ট সিস্টেম\nii. ফাজি লজিক\niii. লার্নিং সিস্টেম', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'কৃত্রিম বুদ্ধিমত্তা সৃষ্টিতে কম্পিউটারে ব্যবহৃত হয়—\ni. ইলেকট্রনিক চিপ\nii. উচ্চক্ষমতাসম্পন্ন মাইক্রোপ্রসেসর\niii. রাউটার', opts: ['iii', 'i ও ii', 'i ও iii', 'ii ও iii'], correct: 1 },
+{ q: 'মাইশার কম্পিউটারে থাকা দাবা খেলার প্রোগ্রামটি নিচের কোন ধারণাটি ব্যবহার করে তৈরি? (উদ্দীপক ভিত্তিক)', opts: ['রোবোটিক্স', 'ভার্চুয়াল রিয়েলিটি', 'আর্টিফিশিয়াল ইন্টেলিজেন্স', 'ন্যানোটেকনোলজি'], correct: 2 },
+{ q: 'মাইশার চালের বিপক্ষে কম্পিউটারও অনেক সময় চাল দিতে ভুল করে। কেননা, কৃত্রিম বুদ্ধিমত্তা—\ni. তথ্য ও অভিজ্ঞতার আলোকে সিদ্ধান্ত গৃহীত হয়\nii. দাবা খেলা সম্ভব নয়\niii. লার্নিং সিস্টেম গুরুত্বপূর্ণ ভূমিকা পালন করে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'রোবোটিক্স কী?', opts: ['রোবট বিজ্ঞান', 'রোবটের ক্রিয়ানীতি', 'শিল্পে ব্যবহৃত রোবট', 'রোবট তৈরিতে ব্যবহৃত ভাষা'], correct: 0 },
+{ q: 'নিচের কোনটি রোবট শব্দের অর্থ প্রকাশ করে?', opts: ['ভিনগ্রহবাসী', 'কৃত্রিম যন্ত্র', 'যন্ত্রমানব', 'উন্নততর জীব'], correct: 2 },
+{ q: 'নিজস্ব বুদ্ধিমত্তা নেই কোনটির?', opts: ['ভাইরাস', 'পিপড়া', 'রোবট', 'মানুষ'], correct: 2 },
+{ q: 'অ্যাকচুয়েটর ব্যবহার করা হয় কোন ক্ষেত্রে?', opts: ['রোবোটিক্স', 'বায়োমেট্রিক্স', 'ভার্চুয়াল রিয়েলিটি', 'বায়োইনফরমেটিক্স'], correct: 0 },
+{ q: 'কোনটি রোবটের ব্যবহার?', opts: ['জটিল সার্জারি চিকিৎসায়', 'ব্যক্তির স্বাক্ষর শনাক্তকরণে', 'নতুন জাতের বীজ উৎপাদনে', 'টেনিস বলের আকৃতি তৈরিতে'], correct: 0 },
+{ q: 'রোবোটিক্স-এর সাধারণ বিষয়গুলো কোনটি?', opts: ['কৃত্রিম বুদ্ধিমত্তা, ইঞ্জিনিয়ারিং, মনোবিদ্যা', 'কৃত্রিম বুদ্ধিমত্তা', 'ইঞ্জিনিয়ারিং', 'মনোবিদ্যা'], correct: 0 },
+{ q: 'রোবট শব্দটি মূলত কোন ভাষা থেকে এসেছে?', opts: ['স্প্যানিশ', 'গ্রিক', 'স্লাভিক', 'ল্যাটিন'], correct: 2 },
+{ q: 'যুক্তরাষ্ট্রের নাসা কর্তৃক মঙ্গলগ্রহে পাঠানো রোবটটির নাম কী?', opts: ['কিউরিওসিটি', 'অ্যাপোলো', 'ভেরোনা', 'ভস্তক'], correct: 0 },
+{ q: 'কোন সায়েন্স ফিকশন রাইটার সর্বপ্রথম রোবোটিক্স শব্দটি ব্যবহার করেন?', opts: ['কারেল কাপেক', 'আইজ্যাক অসিমভ', 'জ্যাক উইলিয়ামসন', 'জুলেভার্ন'], correct: 1 },
+{ q: 'মানুষের দুঃসাধ্য কাজের প্রযুক্তি কোনটি?', opts: ['রোবোটিক্স', 'ভার্চুয়াল রিয়েলিটি', 'ন্যানোটেকনোলজি', 'কৃত্রিম বুদ্ধিমত্তা'], correct: 0 },
+{ q: 'কোন পদ্ধতিতে Actuator ব্যবহৃত হয়?', opts: ['জেনেটিক ইঞ্জিনিয়ারিং', 'ন্যানোটেকনোলজি', 'রোবোটিক্স', 'বায়োইনফরমেটিক্স'], correct: 2 },
+{ q: 'কাজের প্রয়োজনে রোবটকে কত ডিগ্রি কোণ পর্যন্ত ঘুরানো যায়?', opts: ['৯০°', '১৮০°', '২৭০°', '৩৬০°'], correct: 3 },
+{ q: 'রোবট তৈরি—\ni. ব্যয়বহুল\nii. কষ্টসাধ্য\niii. সহজ', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'রোবোটিক্স-এর ক্ষেত্রে প্রযোজ্য —\ni. হার্ডওয়্যার\nii. আর্টিফিশিয়াল ইন্টেলিজেন্স\niii. নতুন গবেষণা পরিচালনা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'রোবটের বৈশিষ্ট্য -\ni. এটি নিখুঁত কর্মক্ষম\nii. এটি ক্লান্তিহীন\niii. এটি ধীরগতিসম্পন্ন', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'কম্পিউটার নিয়ন্ত্রিত রোবটের সাহায্যে বড় বড় কারখানায় করা হয়—\ni. পরিশ্রমসাধ্য কাজ\nii. সহজ কাজ\niii. বিপজ্জনক কাজ', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 }, // ছবি অনুযায়ী 'খ' (i ও iii) দাগানো
+{ q: 'রোবট ব্যবহৃত হয় যেসব কাজে—\ni. কলকারখানার জিনিসপত্র পরিবহনে\nii. যন্ত্রাংশ সংযোজনে\niii. যুদ্ধযানে ড্রাইভারের বিকল্প হিসেবে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'রোবট ব্যবহৃত হয়—\ni. বাসাবাড়িতে গৃহস্থালি কাজে\nii. পরিকল্পনা প্রণয়নে\niii. খনির অভ্যন্তরীণ কাজে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'সামরিক ক্ষেত্রে রোবট ব্যবহৃত হয়—\ni. স্থল মাইন অপসারণ করতে\nii. সামনা সামনি গোলাগুলি করতে\niii. যুদ্ধযানে ড্রাইভারের বিকল্প হিসেবে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'শামীম যন্ত্রটিকে কোন প্রযুক্তি ব্যবহার করে তৈরি করেন? (উদ্দীপক ভিত্তিক)', opts: ['রোবোটিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ন্যানোটেকনোলজি', 'বায়োমেট্রিক্স'], correct: 0 },
+{ q: 'শামীমের যন্ত্রটি ব্যবহার করা যায়—\ni. শিল্প কারখানায়\nii. চিকিৎসা ক্ষেত্রে\niii. গৃহ ব্যবস্থাপনায়', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'উদ্দীপকে কোন প্রযুক্তির ইঙ্গিত রয়েছে? (সোফিয়া রোবট ভিত্তিক)', opts: ['ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং', 'রোবোটিক্স', 'বায়োইনফরমেটিক্স'], correct: 2 },
+{ q: 'উদ্দীপকে ব্যবহৃত প্রযুক্তির ফলে—', opts: ['শিশুদের বুদ্ধির বিকাশ ঘটবে', 'মানুষের কর্মসংস্থান বাড়বে', 'মানবিক মূল্যবোধ বৃদ্ধি পাবে', 'শিল্প কারখানার ব্যয় কমবে'], correct: 3 },
+
+
+
+{ q: 'নিচের কোনটি \'Cryo\' শব্দের অর্থ প্রকাশ করে?', opts: ['খুবই গরম', 'চিকিৎসা', 'অসুস্থতা', 'বরফের মতো ঠাণ্ডা'], correct: 3 },
+{ q: 'অত্যধিক ঠাণ্ডার অস্বাভাবিক বা রোগাক্রান্ত টিস্যুর উপর নিচের কোন পদ্ধতি প্রয়োগ করা হয়?', opts: ['কেমোসার্জারি', 'ক্রায়োসার্জারি', 'হোমোসার্জারি', 'বায়োসার্জারি'], correct: 1 },
+{ q: 'কত তাপমাত্রায় ক্রায়োসার্জারি কোষগুলোকে ধ্বংস করার কাজ করে?', opts: ['0°C', '-19°C', '-41°C', '-58°C'], correct: 2 }, // সাধারণ বইয়ের তথ্য অনুসারে -৪১°C বা তার নিচে
+{ q: 'ক্রায়োসার্জারিতে ব্যবহৃত প্রধান উপাদান—', opts: ['অক্সিজেন', 'নাইট্রোজেন', 'হাইড্রোজেন', 'মিথেন'], correct: 1 },
+{ q: 'কোনটি ক্রায়োসার্জারির সাথে সম্পর্কিত?', opts: ['ফাজি লজিক', 'বিশেষ ধরনের গ্লাভস', 'নাইট্রোজেন', 'নেভিগেশন'], correct: 2 },
+{ q: 'নিচের কোন রোগের জন্য ক্রায়োসার্জারি ব্যবহৃত হয়?', opts: ['চর্মরোগ', 'মস্তিষ্কের রোগ', 'পেটের রোগ', 'দন্তরোগ'], correct: 0 },
+{ q: 'কোনো টিউমারকে অতিরিক্ত ঠাণ্ডা তাপমাত্রায় গলানো হয় কোন সার্জিক্যাল পদ্ধতির মাধ্যমে?', opts: ['বায়োসার্জারি', 'হোমোসার্জারি', 'ক্রায়োসার্জারি', 'কেমোসার্জারি'], correct: 2 },
+{ q: 'ক্রায়োসার্জারি ব্যবহৃত হয়—', opts: ['প্লাস্টিক সার্জারিতে', 'হার্টের বাইপাসে', 'চোখের লেন্স প্রতিস্থাপনে', 'লিভার ক্যান্সারে'], correct: 3 },
+{ q: 'ক্রায়োপ্রোব বলতে কী বুঝায়?', opts: ['বায়োসার্জারিতে ব্যবহৃত সুতার মতো যন্ত্র', 'ক্রায়োসার্জারিতে ব্যবহৃত মোমের মতো যন্ত্র', 'ক্রায়োসার্জারিতে ব্যবহৃত ছোট কাঠির মতো যন্ত্র', 'ক্রায়োসার্জারিতে ব্যবহৃত সূঁচালো পাইপের মতো যন্ত্র'], correct: 3 },
+{ q: 'ক্রায়োসার্জারিতে এমআরআই ব্যবহার করা হয় কেন?', opts: ['আক্রান্ত কোষকে ধ্বংস করার জন্য', 'আক্রান্ত কোষের সঠিক অবস্থান নির্ণয়ের জন্য', 'আক্রান্ত কোষে তরল নাইট্রোজেন প্রয়োগের জন্য', 'আক্রান্ত কোষে শীতল তাপমাত্রা প্রয়োগের জন্য'], correct: 1 },
+{ q: 'ক্রায়োসার্জারিতে ব্যবহৃত যন্ত্রপাতি উৎপাদন ও বিপণনে কোন প্রযুক্তি ব্যবহৃত হয়?', opts: ['যোগাযোগ প্রযুক্তি', 'ইন্টারনেট প্রযুক্তি', 'বায়ো প্রযুক্তি', 'তথ্য প্রযুক্তি'], correct: 3 },
+{ q: 'ক্রায়োসার্জারিতে নাইট্রোজেনের কোন অবস্থা প্রয়োগ করা হয়?', opts: ['কঠিন', 'বায়বীয়', 'আয়নিকৃত', 'তরল'], correct: 3 },
+{ q: 'ক্রায়োসার্জারি চিকিৎসা পদ্ধতিতে ব্যবহৃত হয়—', opts: ['আর্গন', 'কার্বন মনোক্সাইড', 'কঠিন নাইট্রোজেন', 'ডাই মিথাইল ইথার'], correct: 0 },
+{ q: 'ক্রায়োসার্জারিতে—\ni. টিউমার টিস্যুর তাপমাত্রা হ্রাস-বৃদ্ধি করা হয়\nii. নাইট্রোজেন ও অন্যান্য ক্রায়োজেনিক এজেন্ট ব্যবহার করা হয়\niii. অত্যধিক শীতল তাপমাত্রা প্রয়োগ করা হয়', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'ক্রায়োসার্জারি করতে হয় যে চিকিৎসায়-\ni. স্তন ক্যান্সারের চিকিৎসায়\nii. প্রোস্টেট ক্যান্সারের চিকিৎসায়\niii. লিভার ক্যান্সারের চিকিৎসায়', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'ক্রায়োসার্জারির ক্ষেত্রে পৃথক পৃথকভাবে ব্যবহৃত হয়-\ni. কার্বন ডাইঅক্সাইডের তুষার\nii. তরল নাইট্রোজেন\niii. নিয়ন', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'ক্রায়োসার্জারির ক্ষেত্রে সমন্বিতভাবে ব্যবহৃত হয় -\ni. প্রোপেন\nii. অ্যালকোহল\niii. ডাইমিথাইল ইথার', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'ক্রায়োসার্জারির আদি রূপ হলো -\ni. ক্ষত ও প্রদাহের চিকিৎসায় শীতল তাপমাত্রার প্রয়োগ\nii. লবণ ও পানির বরফ জমাট মিশ্রণের সাহায্যে চিকিৎসা\niii. তরল নাইট্রোজেনের মাধ্যমে ত্বকের রোগের চিকিৎসা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'ক্রায়োসার্জারি আধুনিক ও উন্নত হয়ে ওঠে —\ni. তরল নাইট্রোজেন ব্যবহারের ফলে\nii. তরল হাইড্রোজেন ব্যবহারের ফলে\niii. বিভিন্ন ক্রায়োজেনিক এজেন্ট ব্যবহারের ফলে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'ক্রায়োথেরাপি রেডিও থেরাপির তুলনায় ভালো। কেননা-\ni. এতে পার্শ্বপ্রতিক্রিয়া কম\nii. রোগীর ধকল কম\niii. এটি বেশি নিরাপদ', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'ক্রায়োসার্জারির সুবিধা হলো—\ni. এতে রোগীর ঝুঁকি কম\nii. বাধাবন্ধক ব্যবহৃত হয় না\niii. কাটছেঁড়ার প্রয়োজন কম', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 }, // ছবি অনুযায়ী খ দাগানো (i ও iii)
+{ q: 'ক্রায়োসার্জারিতে ব্যবহৃত যন্ত্রপাতি হলো—\ni. ক্রায়োপ্রোব\nii. স্প্রে-ডিভাইস\niii. অ্যাকচুয়েটর', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'প্রশিক্ষণে ব্যবহৃত প্রযুক্তিটি হচ্ছে — (ডা. মুনির এর উদ্দীপক)', opts: ['ক্রায়োসার্জারি', 'আর্টিফিশিয়াল ইন্টেলিজেন্স', 'ভার্চুয়াল রিয়েলিটি', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 2 },
+{ q: 'ব্যবহৃত চিকিৎসা পদ্ধতিতে — (ডা. মুনির এর উদ্দীপক)\ni. চিকিৎসা ব্যয় তুলনামূলকভাবে কম\nii. অপারেশনের ধকল সহ্য করতে হয় না\niii. আশপাশের কোষের ক্ষতি হয় না', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'চিকিৎসায় ব্যবহৃত পদ্ধতি হচ্ছে— (মি. সালাম এর উদ্দীপক)', opts: ['ক্রায়োসার্জারি', 'বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 0 },
+{ q: 'গবেষণায় ব্যবহৃত প্রযুক্তির দ্বারা— (মি. সালাম এর উদ্দীপক)\ni. বাণিজ্যিকভাবে ইনসুলিন তৈরি করা যায়\nii. জীবের নতুন জিনোম আবিষ্কার করা যায়\niii. অর্থনৈতিক উন্নয়ন ঘটে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: '\'কিউরিওসিটি\' নামক মহাকাশযান কোন গ্রহে পাঠানো হয়েছে?', opts: ['মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শনি'], correct: 0 },
+{ q: 'কোথায় স্পেস স্টেশন স্থাপিত হয়েছে?', opts: ['সূর্যের কক্ষপথে', 'মঙ্গলগ্রহে', 'পৃথিবীতে', 'পৃথিবীর কক্ষপথে'], correct: 3 },
+{ q: 'চন্দ্রে অবতরণকারী প্রথম মনুষ্যবাহী মহাকাশযানের নাম—', opts: ['অ্যাপোলো-১১', 'স্পুটনিক-২', 'স্পুটনিক-১', 'লুনা-৯'], correct: 0 },
+{ q: 'মহাকাশযানগুলো বর্তমানে ব্যবহৃত হয় যে কাজে—\ni. স্পেস স্টেশনে মালামাল পৌঁছানোর কাজে\nii. কৃত্রিম উপগ্রহ স্থাপনের কাজে\niii. মঙ্গল গ্রহে অভিযানের কাজে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'মহাশূন্যে পৃথিবীর কক্ষপথে স্থাপিত স্পেস স্টেশনগুলোর কার্যক্রম পরিচালিত হয়—\ni. কম্পিউটার নিয়ন্ত্রিত রোবট দ্বারা\nii. বাস্তব অভিজ্ঞতাকে কাজে লাগিয়ে\niii. টেলিযোগাযোগ ব্যবস্থার সাহায্যে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: '\'ক্যাড\' বলতে কী বোঝায়?', opts: ['কম্পিউটার এইডেড ডিরেকশন', 'কন্ট্রোল এইডেড ডিজাইন', 'কম্পিউটার এইডেড ডিজাইন', 'কন্ট্রোল এইডেড ডিরেকশন'], correct: 2 },
+{ q: 'কোনটি নতুন পণ্যের ডিজাইন তৈরিতে প্রয়োজন?', opts: ['CAD', 'MICR', 'ATM', 'CCTV'], correct: 0 },
+{ q: 'প্রকৌশলগত নকশা তৈরি ও বাস্তবায়নে ব্যবহৃত হয়—\ni. কম্পিউটার এইডেড ডিজাইন\nii. কম্পিউটার এইডেড ডিরেকশন\niii. কম্পিউটার এইডেড ম্যানুফ্যাকচারিং', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 }, // ছবি অনুযায়ী খ (i ও iii) দাগানো
+{ q: 'উৎপাদন ব্যবস্থায় গুরুত্বপূর্ণ ভূমিকা পালন করে—\ni. টেলিপোর্ট সেবা\nii. টেলিযোগাযোগ সেবা\niii. ইন্টারনেট সেবা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+{ q: 'আইসিটি-নির্ভর উৎপাদন ব্যবস্থার উদাহরণ হলো—\ni. কম্পিউটারের সাহায্যে পণ্যের মান নিয়ন্ত্রণ\nii. ঝুঁকিপূর্ণ কাজে রোবটের ব্যবহার\niii. স্বয়ংক্রিয় উৎপাদন ব্যবস্থাপনা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'কোন ক্ষেত্রে বায়োমেট্রিক প্রযুক্তি ব্যবহৃত হয়?', opts: ['কৃষিক্ষেত্রে', 'শিক্ষাক্ষেত্রে', 'নিরাপত্তা ক্ষেত্রে', 'বিনোদন ক্ষেত্রে'], correct: 2 },
+{ q: 'মানুষকে ইউনিক হিসেবে শনাক্তকরণ প্রযুক্তি হলো—', opts: ['জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি'], correct: 1 },
+{ q: 'তথ্য প্রযুক্তির সাহায্যে মানুষের শারীরিক বৈশিষ্ট্য চিহ্নিত করে শনাক্ত করাকে কী বলে?', opts: ['বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'বায়োটেকনোলজি', 'বায়োমিট'], correct: 0 },
+{ q: 'কোন প্রযুক্তির সাহায্যে মানুষকে অদ্বিতীয়ভাবে শনাক্ত করা যায়?', opts: ['ন্যানোটেকনোলজি', 'বায়োমেট্রিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োইনফরমেটিক্স'], correct: 1 },
+{ q: 'কোনটি বায়োমেট্রিক্স-এ ব্যবহৃত হয়?', opts: ['সেন্সর', 'ডিজিটাল মিটার', 'ওয়াট মিটার', 'থার্মোমিটার'], correct: 0 },
+{ q: 'তথ্য প্রযুক্তির সাহায্যে জৈব রসায়ন ব্যবহার করে জীববিজ্ঞানের সমস্যার সমাধানকে কী বলা হয়?', opts: ['ন্যানোটেকনোলজি', 'বায়োমেট্রিক্স', 'বায়োটেকনোলজি', 'বায়োইনফরমেটিক্স'], correct: 3 },
+{ q: 'মোবাইল সিম ক্রয় করতে কোন প্রযুক্তি গ্রাহককে সহায়তা করে?', opts: ['বায়োমেট্রিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ন্যানোটেকনোলজি', 'ক্রায়োসার্জারি'], correct: 0 },
+{ q: 'কম্পিউটারের মধ্যে জীবতথ্য নিয়ে গবেষণা করাকে কী বলে?', opts: ['ড্রাইল্যাব', 'বায়োল্যাব', 'ওয়েটল্যাব', 'এ্যাক্সল্যাব'], correct: 0 },
+{ q: 'কোনটি বায়োইনফরমেটিক্স পদ্ধতি সফটওয়্যার টুলস হিসাবে ব্যবহৃত হয়?', opts: ['SQL', 'LISP', 'CLISP', 'PROLOG'], correct: 0 },
+{ q: 'কোনটি বায়োইনফরমেটিক্সের বৈশিষ্ট্য?', opts: ['স্বল্প ডেটা সংরক্ষণ', 'জৈবিক ডেটার সমাহার', 'ন্যানোটেকনোলজির ব্যবহার', 'প্রযুক্তিনির্ভর নিরাপত্তা'], correct: 1 },
+{ q: 'কোনটি বায়োইনফরমেটিক্স এর মূল উদ্দেশ্য—', opts: ['জৈবিক পদ্ধতি সম্পর্কে সঠিক ধারণা লাভ করা', 'কম্পিউটার বিজ্ঞানের তথ্যমালা বিশ্লেষণ করা', 'জীববিদ্যার তথ্যমালা সংরক্ষণ করা', 'অজৈবিক পদ্ধতি সম্পর্কে সঠিক ধারণা লাভ করা'], correct: 2 },
+{ q: 'ব্যক্তিকে অদ্বিতীয়ভাবে সনাক্ত করার প্রযুক্তি কোনটি?', opts: ['বায়োইনফরমেটিক্স', 'বায়োমেট্রিক্স', 'ন্যানোটেকনোলজি', 'রোবোটিক্স'], correct: 1 },
+{ q: 'জীব সংক্রান্ত তথ্য ব্যবস্থাপনার কাজে কম্পিউটার প্রযুক্তির প্রয়োগ হলো—', opts: ['বায়োইনফরমেটিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ক্রায়োসার্জারি', 'বায়োমেট্রিক্স'], correct: 0 },
+{ q: 'জিন ফাইন্ডিং গবেষণায় কি ব্যবহৃত হয়?', opts: ['বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ন্যানোটেকনোলজি'], correct: 1 },
+{ q: 'বিভিন্ন জটিল রোগের কারণ আবিষ্কারে কোন প্রযুক্তি কাজ করছে?', opts: ['বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ক্রায়োসার্জারি'], correct: 0 },
+{ q: 'মানুষের শারীরিক বৈশিষ্ট্যের মধ্যে উল্লেখযোগ্য হলো—\ni. চোখের মণি\nii. আঙুলের ছাপ\niii. DNA', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'বায়োমেট্রিক্স সিস্টেমে শনাক্তকরণে বিবেচিত বায়োলজিক্যাল ডেটাসমূহ—\ni. হ্যান্ড জিওমেট্রি\nii. আইরিস\niii. সিগনেচার', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'আচরণগত বৈশিষ্ট্যের বায়োমেট্রিক্স হচ্ছে—\ni. ফেস রিকোগনিশন\nii. ভয়েস রিকোগনিশন\niii. টাইপিং কী স্ট্রোক', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+{ q: 'বায়োমেট্রিক্স প্রযুক্তি ব্যবহৃত হতে পারে—\ni. জাতীয় পরিচয়পত্রে\nii. পাসপোর্টে\niii. জন্ম নিবন্ধনে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'বায়োইনফরমেটিক্স এর সঙ্গে জড়িত —\ni. জীববিদ্যা\nii. পরিসংখ্যান\niii. কম্পিউটার বিজ্ঞান', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'বায়োইনফরমেটিক্স এর প্রধান গবেষণার বিষয়গুলো হলো —\ni. ইমেজ বিশ্লেষণ\nii. জিন এর সূত্র বিশ্লেষণ\niii. ধারা বিশ্লেষণ', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'বায়োইনফরমেটিক্সের ব্যবহারের ক্ষেত্রগুলি হলো—\ni. জৈব প্রযুক্তি\nii. জীবাণু অস্ত্র তৈরি\niii. মহাকাশ গবেষণা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'ছকে প্রদত্ত \'A\' পদ্ধতিটি কোন কাজে ব্যবহৃত হয়? (উদ্দীপক ভিত্তিক)', opts: ['পরীক্ষার উত্তরপত্র মূল্যায়নে', 'ড্রাইভিং লাইসেন্স এর সত্যতা যাচাইকরণে', 'জীবের বিবর্তন রহস্য নির্ণয়ে', 'নতুন জীবের বীজ উদ্ভাবনে'], correct: 1 },
+{ q: 'ছকে \'A\' পদ্ধতিটি সম্পাদনকালে—\ni. আঙুলের ছাপের বিশেষ বৈশিষ্ট্যকে ফিল্টার করা হয়\nii. অপটিক্যাল স্ক্যানারের মাধ্যমে আঙুলের ছাপের ইমেজ নেয়া হয়\niii. আঙুলের ছাপের ইমেজকে সংরক্ষণ করা হয়', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'উদ্দীপকে অফিসের প্রবেশপথে কোন প্রযুক্তি ব্যবহার করা হয়েছে?', opts: ['ভার্চুয়াল রিয়েলিটি', 'বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি'], correct: 1 },
+{ q: 'উদ্দীপকে ব্যবহৃত প্রযুক্তিগুলোর মধ্যে নির্ভুলভাবে কর্মকর্তাদের দাবি পূরণে কোনটি সবচেয়ে বেশি কার্যকর?', opts: ['ফিঙ্গার প্রিন্ট', 'হ্যান্ড জিоমেট্রি', 'আইরিস ও রেটিনা স্ক্যান', 'ফেস রিকগনিশন'], correct: 2 },
+{ q: 'ICT শিক্ষক মিজান স্যার কোন বৈশিষ্ট্যের প্রয়োগ দ্বারা ল্যাবে প্রবেশ করলেন? (উদ্দীপক ভিত্তিক)', opts: ['আঙুলের ছাপ', 'মুখের গড়ন', 'কণ্ঠস্বর', 'রেটিনা'], correct: 3 },
+{ q: 'ছাত্ররা বাস্তব স্বাদ পাওয়ার সময় দেখতে পেল— (উদ্দীপক ভিত্তিক)\ni. দ্বি-মাত্রিক দৃশ্য\nii. ত্রি-মাত্রিক দৃশ্য\niii. কৃত্রিম জীবন্ত দৃশ্য', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+{ q: 'GMO-বলতে কি বোঝায়?', opts: ['Genetic Modified Organism', 'Genetic Medical Organism', 'Genetically Modified Organism', 'Genetic Modified Organic'], correct: 2 },
+{ q: 'কিসের মাধ্যমে DNA-সমূহ প্রাণীর কোষের নিউক্লিয়াসে প্রবেশ করানো হয়?', opts: ['মিনি-ইনজেকশন', 'সেমিমাইক্রো ইনজেকশন', 'মাইক্রো ইনজেকশন', 'সেন্টিমাইক্রো ইনজেকশন'], correct: 2 },
+{ q: 'কোনটির মাধ্যমে বিভিন্ন রকম হরমোন তৈরি করা সম্ভব হচ্ছে?', opts: ['ন্যানোটেকনোলজি', 'বায়োইনফরমেটিক্স', 'বায়োমেট্রিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 3 },
+{ q: 'কোন পদ্ধতি পাউরুটিতে ব্যবহৃত ইস্ট তৈরিতে ব্যবহৃত হয়?', opts: ['ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োইনফরমেটিক্স', 'বায়োমেট্রিক্স'], correct: 1 },
+{ q: 'কোনটি জীবদেহে পরিবর্তন আনার জন্য প্রয়োজন?', opts: ['বায়োইনফরমেটিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োমেট্রিক্স', 'ন্যানোটেকনোলজি'], correct: 1 },
+{ q: 'জেনেটিক ইঞ্জিনিয়ারিং বাণিজ্যিকভাবে কোন ক্ষেত্রে ব্যবহৃত হচ্ছে?', opts: ['শিল্পক্ষেত্রে', 'গবেষণা ক্ষেত্রে', 'শিক্ষাক্ষেত্রে', 'কৃষিক্ষেত্রে'], correct: 3 },
+{ q: 'একটি নির্দিষ্ট জিন বহনকারী কোনো জীব থেকে DNA খণ্ড পৃথক করে ভিন্ন একটি জীভে স্থানান্তরের কৌশলকে কী বলে?', opts: ['বায়োমেট্রিক্স', 'ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োইনফরমেটিক্স'], correct: 2 },
+{ q: 'ট্রান্সজেনিক উদ্ভিদ ও প্রাণী সৃষ্টিতে কাজ করে কোনটি?', opts: ['বায়োমেট্রিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ন্যানোটেকনোলজি', 'বায়োইনফরমেটিক্স'], correct: 1 },
+{ q: 'নিচের কোনটি জীবদেহের ডিএনএ-এর রৈখিক একক বৈশিষ্ট্য নির্দেশক?', opts: ['সেন্ট্রিওল', 'কোষ', 'জিন', 'ক্রোমাটিড'], correct: 2 },
+
+
+{ q: 'যে কৌশল অবলম্বন করে জেনেটিক ইঞ্জিনিয়ারিং-এ এক জীবের কোষ থেকে অন্য জীবে স্থানান্তর করা হয় তাদেরকে একত্রে কী বলে?', opts: ['রিকম্বিনেন্ট RNA', 'রেস্ট্রিকশন DNA', 'ফেব্রিকশন RNA', 'রিকম্বিনেন্ট DNA'], correct: 3 },
+{ q: 'সাধারণ DNA অণু ছাড়াও ব্যাকটেরিয়ার দেহে অতিরিক্ত স্বনির্ভর বৃত্তাকার যে DNA থাকে তাকে কী বলে?', opts: ['প্লাজমিড', 'নিউক্লিওলাস', 'ক্রোমোজোম', 'রিকম্বিনেন্ট DNA'], correct: 0 },
+{ q: 'উচ্চ ফলনশীল শস্য উৎপাদনে কোন প্রযুক্তি ব্যবহৃত হয়?', opts: ['বায়োমেট্রিক্স', 'ভার্চুয়াল রিয়েলিটি', 'ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 3 },
+{ q: 'জেনেটিক ইঞ্জিনিয়ারিং ব্যবহারের ক্ষেত্র কোনটি?', opts: ['চিকিৎসা', 'নিরাপত্তা', 'খেলাধুলা', 'সফটওয়্যার'], correct: 0 },
+{ q: 'নতুন ধরনের ক্রোমোজোম তৈরির কৌশলকে কী বলে?', opts: ['জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি', 'বায়োমেট্রিক্স'], correct: 0 },
+{ q: 'জেনেটিক ইঞ্জিনিয়ারিং এর জনক কে?', opts: ['Jack Williamson', 'E. Coli', 'Paul berg', 'Stanley Cohen'], correct: 2 },
+{ q: 'জেনেটিক ইঞ্জিনিয়ারিংয়ের মাধ্যমে—\ni. জীবের নতুন জিনোম আবিষ্কার করা যায়\nii. বাণিজ্যিকভাবে ইনসুলিন তৈরি করা যায়\niii. খুব সহজে ব্যক্তি শনাক্ত করা যায়', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'রেস্ট্রিকশন এনজাইম দিয়ে—\ni. ডিএনএ অণু কাটা যায়\nii. এক জীবের কোষ থেকে DNA অংশ অন্য জীবে স্থানান্তর করা যায়\niii. এক জীবের DNA অংশ অন্য জীবের DNA অংশের সাথে লাগানো যায়', opts: ['i', 'j ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'জেনেটিক ইঞ্জিনিয়ারিং সফলভাবে প্রয়োগ হচ্ছে—\ni. শিল্পক্ষেত্রে\nii. চিকিৎসা ক্ষেত্রে\niii. কৃষিক্ষেত্রে', opts: ['i, ii ও iii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 }, // চিত্র অনুযায়ী ১, ২, ৩ সব সঠিক
+{ q: 'রিকম্বিনেন্ট DNA প্রযুক্তির ধাপগুলো হলো—\ni. DNA নির্বাচন\nii. DNA এর বাহক নির্বাচন\niii. DNA খণ্ড কর্তন', opts: ['i ও ii', 'j ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'উদ্দীপকের গবেষণার সহায়ক প্রযুক্তি হলো— (বাংলাদেশ ধান গবেষণা ইনস্টিটিউট এর উদ্দীপক)', opts: ['বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি', 'বায়োমেট্রিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 3 },
+{ q: 'প্রতিষ্ঠানটির সাফল্যে দেশে—\ni. অর্থনৈতিক উন্নয়ন হবে\nii. জীববৈচিত্র্য সৃষ্টির পথ সুগম হবে\niii. ধানের দেশীয় প্রজাতি বিলুপ্ত হবে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'উদ্দীপকে লোকমান সাহেবের গবেষণার সহায়ক প্রযুক্তি কোনটি? (লোকমান সাহেবের উদ্দীপক)', opts: ['বায়োমেট্রিক্স', 'ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োইনফরমেটিক্স'], correct: 2 },
+{ q: 'লোকমান সাহেবের সাফল্যে—\ni. অর্থনৈতিক উন্নয়ন ঘটবে\nii. দেশে প্রচুর ফল ও ফুল উৎপাদন হবে\niii. দেশীয় প্রজাতি বিলুপ্তির সম্ভাবনা রয়েছে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'উদ্দীপকে বর্ণিত বিশেষ ধরনের ধানবীজ উদ্ভাবনে কোন পদ্ধতির সহায়তা নেয়া হয়েছে? (ফজল মিঞার উদ্দীপক)', opts: ['বায়োইনফরমেটিক্স', 'বায়োটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োমেট্রিক্স'], correct: 2 },
+{ q: 'উদ্দীপকে উল্লিখিত ধান বীজের জিনে—\ni. লম্বা বৈশিষ্ট্যের ধান গাছের ডিএনএ সংযুক্ত করা হয়েছে\nii. উচ্চ ফলনশীলতার বৈশিষ্ট্য সংযুক্ত করা হয়েছে\niii. ডুবে না যাবার বৈশিষ্ট্য সংযুক্ত করা হয়েছে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 }, // বন্যাপ্রবণ এলাকায় ডুবে না যাওয়ার বৈশিষ্ট্য ও ফলনশীলতা (ii ও iii)
+{ q: 'উদ্দীপকে BRRI কর্তৃক ব্যবহৃত প্রযুক্তি কোনটি? (BRRI এর উদ্দীপক)', opts: ['বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 3 },
+{ q: 'উদ্দীপকের কর্মকাণ্ডে—\ni. অর্থনৈতিক উন্নয়ন হবে\nii. চিকিৎসাক্ষেত্রে বিরূপ প্রভাব পড়বে\niii. জীববৈচিত্র্যের উদ্ভব হবে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'বাবুর ব্যবহৃত প্রযুক্তিটি— (বাবু ও তার বাবার উদ্দীপক)', opts: ['ভার্চুয়াল রিয়েলিটি', 'ই-লার্নিং', 'ই-কমার্স', 'কৃত্রিম বুদ্ধিমত্তা'], correct: 0 },
+{ q: 'বাবুর বাবার ব্যবহৃত প্রযুক্তিটির সীমাবদ্ধতা হলো—\ni. দেশীয় প্রজাতির বিলুপ্তি\nii. ফলন কমে যাওয়া\niii. নতুন রোগ সৃষ্টি হতে পারে', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+{ q: 'এক ন্যানোমিটার সমান কত মিটার?', opts: ['10^-6 মিটার', '10^-9 মিটার', '10^-7 মিটার', '10^-12 মিটার'], correct: 1 },
+{ q: 'আণবিক পর্যায়ে পদার্থকে পরিবর্তন ও নিয়ন্ত্রণ করার বিদ্যাকে বলা হয়—', opts: ['জেনেটিক ইঞ্জিনিয়ারিং', 'নিউক্লিয়ার ইঞ্জিনিয়ারিং', 'বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি'], correct: 3 },
+{ q: 'কাকে ন্যানো প্রযুক্তির জনক বলা হয়?', opts: ['জোহাল মেভেস', 'লুই পাস্তুর', 'রিচার্ড ফাইনম্যান', 'মার্শাল ম্যাকলুহান'], correct: 2 },
+{ q: 'ন্যানো বুঝায় কোনটি?', opts: ['১০^-৬', '১০^-৯', '১০^-১২', '১০^-১৫'], correct: 1 },
+{ q: 'Apple M-11 মোবাইলটি তৈরিতে কোন প্রযুক্তি ব্যবহার করা হয়েছে?', opts: ['বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি', 'জেনেটিক ইঞ্জিনিয়ারিং', 'বায়োটেকনোলজি'], correct: 1 },
+{ q: 'কোন প্রযুক্তির মাধ্যমে আমাদের ভোগ্যপণ্য ছোট হতে থাকে?', opts: ['ট্রানজিস্টর প্রযুক্তি', 'বায়ো প্রযুক্তি', 'লিকুইড ক্রিস্টাল প্রযুক্তি', 'ন্যানো প্রযুক্তি'], correct: 3 },
+{ q: 'সংক্ষেপে ন্যানোটেকনোলজি বা ন্যানো প্রযুক্তিকে কী বলে?', opts: ['ন্যানোটেল', 'ন্যানোমিটার', 'ন্যানোটেক', 'ন্যানোওয়েভ'], correct: 2 },
+{ q: 'ন্যানো অবজেক্ট তৈরি করা হয় কোথা থেকে?', opts: ['মলিকুলার কম্পোনেন্ট থেকে', 'লার্জার এন্টিটি হতে', 'শাইনিং-এর মাধ্যমে', 'প্রোগ্রামিং দ্বারা'], correct: 0 },
+{ q: 'খাদ্যজাত দ্রব্যের মান সঠিক রাখার জন্য প্যাকেটের ভেতর প্রলেপ করার প্রযুক্তি কি?', opts: ['রোবোটিক্স', 'বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'ন্যানোটেকনোলজি'], correct: 3 },
+{ q: 'টপ ডাউন পদ্ধতিতে কোনো জিনিসকে নির্দিষ্ট আকার দেওয়া হয়। এর সাথে সংশ্লিষ্ট প্রযুক্তি কোনটি?', opts: ['বায়োমেট্রিক্স', 'বায়োইনফরমেটিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ন্যানোটেকনোলজি'], correct: 3 },
+{ q: 'আণবিক পর্যায়ে ধাতব পদার্থকে পরিবর্তন ও নিয়ন্ত্রণের প্রযুক্তি কোনটি?', opts: ['রোবোটিক্স', 'ন্যানোটেকনোলজি', 'বায়োমেট্রিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 1 },
+{ q: 'স্মার্টফোন তৈরিতে ব্যবহৃত ক্ষুদ্র যন্ত্রাংশ ত্রুটিহীনভাবে স্থাপন সম্ভব হচ্ছে কিসের কল্যাণে?', opts: ['ভার্চুয়াল রিয়েলিটি', 'ন্যানোটেকনোলজি', 'রোবট', 'জেনেটিক ইঞ্জিনিয়ারিং'], correct: 1 },
+{ q: 'মলিকুলার কম্পোনেন্ট থেকে তৈরি অবজেক্টকে কী বলে?', opts: ['বায়োমেট্রিক্স', 'জেনেটিক ইঞ্জিনিয়ারিং', 'ন্যানোটেকনোলজি', 'বায়োইনফরমেটিক্স'], correct: 2 },
+{ q: 'ন্যানোটেকনোলজির ব্যবহারিক ক্ষেত্র হলো—\ni. রসায়ন\nii. পদার্থবিজ্ঞান\niii. মেকানিক্যাল ইঞ্জিনিয়ারিং', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'ন্যানো প্রযুক্তির ব্যবহার যেসব ক্ষেত্রে বৈপ্লবিক পরিবর্তন আনতে পারে—\ni. চিকিৎসাবিজ্ঞান\nii. ইলেকট্রনিক্স\niii. শক্তি উৎপাদন', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'ন্যানোটেকনোলজি দিয়ে তৈরিকৃত যন্ত্র হতে পারে—\ni. কম্পিউটার\nii. ক্রায়োপ্রোব\niii. রোবট', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 }, // চিত্রানুযায়ী খ (i ও iii)
+{ q: 'ইন্টারনেট ব্যবহার করে অন্যের কম্পিউটারে অবৈধভাবে অনুপ্রবেশ করাকে কী বলে?', opts: ['ক্র্যাকিং', 'প্রোগ্রামিং', 'চ্যাটিং', 'হ্যাকিং'], correct: 3 },
+{ q: 'হ্যাকার বলা হয় কাদেরকে?', opts: ['যারা সুকৌশলে বাজারজাত করে', 'যারা পণ্য বাজারজাত করে', 'যারা ইন্টারনেটের মাধ্যমে কম্পিউটারে অবৈধভাবে প্রবেশ করে', 'যারা ইন্টারনেট ব্যবহার করে'], correct: 2 },
+{ q: 'কম্পিউটার ইথিকস-এর নির্দেশনা কয়টি?', opts: ['৮', '১০', '১২', '১৪'], correct: 1 },
+{ q: 'প্লেজিয়ারিজম কোন অপরাধের সাথে জড়িত?', opts: ['অন্যের লেখা চুরি', 'সফটওয়্যার পাইরেসি', 'কপিরাইট লঙ্ঘন', 'আইডেন্টিটি চুরি'], correct: 0 },
+{ q: 'অনুমতি ব্যতীত কোনো কম্পিউটার নেটওয়ার্কে প্রবেশ করে কম্পিউটার ব্যবহার করাকে কী বলে?', opts: ['সফটওয়্যার পাইরেসি', 'ন্যানোটেকনোলজি', 'প্লেজিয়ারিজম', 'হ্যাকিং'], correct: 3 },
+{ q: 'নেটকূলক অন্যের তথ্যকে নিজের নামে চালিয়ে দেয়াকে কী বলে?', opts: ['হ্যাকিং', 'ফিশিং', 'স্পামিং', 'প্লেজিয়ারিজম'], correct: 3 },
+{ q: 'রাসেল ফেসবুক পেজ থেকে গল্প নিয়ে রাকা নিজের নামে মাদ্রাসা ম্যাগাজিনে ছাপিয়ে দিল। রাকার কাজটি কোন ধরনের?', opts: ['হ্যাকিং', 'পাইরেসি', 'ফিশিং (ফেডুরি)', 'প্লেজিয়ারিজম'], correct: 3 },
+{ q: 'Computer Crime এর অন্তর্ভুক্ত হলো—\ni. কপিরাইট ভঙ্গ করে বই-পুস্তক ব্যবহার\nii. অশ্লীল চলচ্চিত্রের প্রচার\niii. নতুন ব্যাংক অ্যাকাউন্ট খোলা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'হ্যাকারের কাজ হলো—\ni. কম্পিউটারে প্রয়োজনীয় ফাইল নষ্ট করা\nii. অনলাইন প্রতারণার মাধ্যমে টাকা-পয়সা চুরি\niii. নতুন নতুন সফটওয়্যার তৈরি করা', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+{ q: 'কম্পিউটার অপরাধের অন্তর্ভুক্ত বিষয় হলো—\ni. সফটওয়্যার পাইরেসি\nii. প্লেজিয়ারিজম\niii. ডেটা চুরি', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+{ q: 'উদ্দীপকের \'খ\' শিক্ষার্থীর কর্মকাণ্ড কোনটি? (\'ক\' ও \'খ\' শিক্ষার্থীর উদ্দীপক)', opts: ['স্পামিং', 'প্লেজিয়ারিজম', 'ক্র্যাকিং', 'স্পুফিং'], correct: 1 },
+{ q: 'উদ্দীপকের আলোকে \'ক\' শিক্ষার্থীর কর্মকাণ্ড—\ni. কপিরাইট আইন না মানা\nii. টেলনেট\niii. কম্পিউটার এথিকস', opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 }, // ছবি অনুযায়ী খ (i ও iii)
+{ q: 'দুষ্কৃতকারীর কর্মকাণ্ডটি হচ্ছে— (Mirpur NH Alimi Madrasah এর উদ্দীপক)', opts: ['হ্যাকিং', 'প্লেজিয়ারিজম', 'কপিরাইট ভঙ্গ', 'সফটওয়্যার পাইরেসি'], correct: 0 },
+{ q: 'দুষ্কৃতকারী ব্যর্থ হলো, কারণ তথ্যগুলো ছিল—', opts: ['Decrypted', 'Encrypted', 'Unauthorized', 'Indexed'], correct: 1 }
+
+
+],
+
 'ict_ch2': [{ q: 'ডেটা এক স্থান থেকে অন্য স্থানে স্থানান্তরের প্রক্রিয়াকে কী বলে?', opts: ['ডেটা কমিউনিকেশন', 'ডেটা প্রসেসিং', 'নেটওয়ার্কিং', 'প্রোগ্রামিং'], correct: 0 }],
 'ict_ch3_1': [{ q: 'দশমিক সংখ্যা পদ্ধতিতে ভিত্তি কত?', opts: ['২', '৮', '১০', '১৬'], correct: 2 }],
 'ict_ch3_2': [{ q: 'কম্পিউটারের মস্তিষ্ক কোনটি?', opts: ['RAM', 'CPU', 'Hard Disk', 'Monitor'], correct: 1 }],
@@ -472,7 +806,151 @@ const QB={
 'acc1_ch8': [{ q: 'সুনাম কোন ধরনের সম্পত্তি?', opts: ['দৃশ্যমান', 'অদৃশ্যমান', 'কাল্পনিক', 'চলমান'], correct: 1 }],
 'acc1_ch9': [{ q: 'আর্থিক বিবরণীতে কোন বিবরণী থাকে না?', opts: ['লাভ-লোকসান হিসাব', 'উত্তরণ বিবরণী', 'মালিকানা হিসাব', 'কর্মসংস্থান হিসাব'], correct: 3 }],
 'acc1_ch10': [{ q: 'একতরফা দাখিলা পদ্ধতিতে কোন বই রাখা হয় না?', opts: ['ক্যাশ বুক', 'জাবেদা', 'লেজার', 'ব্যক্তিগত হিসাব'], correct: 2 }],
-'acc2_ch1': [{ q: 'অব্যবসায়ী প্রতিষ্ঠানের প্রধান হিসাব কোনটি?', opts: ['লাভ-লোকসান', 'আয়-ব্যয়', 'প্রাপ্য-প্রদেয়', 'রেওয়ামিল'], correct: 1 }],
+'acc2_ch1': [{ q: 'অব্যবসায়ী প্রতিষ্ঠানের প্রধান হিসাব কোনটি?', opts: ['লাভ-লোকসান', 'আয়-ব্যয়', 'প্রাপ্য-প্রদেয়', 'রেওয়ামিল'], correct: 1 },
+
+
+    // Page 10: বহুপদী সমাপ্তিসূচক প্রশ্ন (৬১-৭৩)
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের হিসাব নিকাশের ভিত্তি হলো—\ni. নগদ ভিত্তি\nii. বকেয়া ভিত্তি\niii. মিশ্র ভিত্তি\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবের বৈশিষ্ট্য হলো—\ni. এটি একটি বাস্তব হিসাব\nii. এতে সকল প্রকার নগদ আদান-প্রদান লিপিবদ্ধ হয়\niii. এর সমাপনী উদ্বৃত্ত নগদ তহবিল ও ব্যাংক জমার উদ্বৃত্ত নির্দেশ করে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "আয়-ব্যয় হিসাবের বৈশিষ্ট্য হলো—\ni. এটি একটি নামিক হিসাব\nii. এতে কেবল চলতি বছরের মুনাফাজাতীয় আয়-ব্যয় লিপিবদ্ধ হয়\niii. এর সমাপনী উদ্বৃত্ত মূলধন তহবিলে স্থানান্তরিত হয়\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "মূলধন তহবিল নির্ণয়ে বিবেচনা করা হয়—\ni. প্রারম্ভিক মোট সম্পদ\nii. প্রারম্ভিক মোট দায়\niii. সমাপনী মোট সম্পদ\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আয়াতিরিক্ত ব্যয়—\ni. মূলধন তহবিলকে বৃদ্ধি করে\nii. মূলধন তহবিল থেকে বিয়োগ করা হয়\niii. আর্থিক অবস্থার বিবরণীতে দায়ের পাশে বসে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+    { q: "অনুদান হলো—\ni. এককালীন বড় অংকের প্রাপ্তি\nii. নিয়মিত বা পুনরাবৃত্তিমূলক প্রাপ্তি\niii. মূলধনজাতীয় প্রাপ্তি\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+    { q: "উইলকৃত ধনদৌলত—\ni. মূলধনজাতীয় প্রাপ্তি\nii. আর্থিক অবস্থার বিবরণীর দায়ের পাশে বসে\niii. আয়-ব্যয় হিসাবে বসে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বিশেষ তহবিল—\ni. একটি নির্দিষ্ট উদ্দেশ্যে সৃষ্টি করা হয়\nii. আর্থিক অবস্থার বিবরণীর দায়ের পাশে আলাদাভাবে বসে\niii. এর কোনো খরচ থাকলে তা এ তহবিল থেকে বিয়োগ করা হয়\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "আজীবন সভ্যদের চাঁদা—\ni. মূলধনজাতীয় প্রাপ্তি\nii. আর্থিক অবস্থার বিবরণীর দায়ের পাশে বসে\niii. আয়-ব্যয় হিসাবের ক্রেডিট পাশে বসে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বকেয়া চাঁদা—\ni. চলতি বছরের অনাদায়ী আয়\nii. আর্থিক অবস্থার বিবরণীর সম্পদ পাশে বসে\niii. আয়-ব্যয় হিসাবের ক্রেডিট পাশে চলতি বছরের চাঁদার সাথে যোগ হয়\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "অগ্রিম প্রাপ্ত চাঁদা—\ni. পরবর্তী বছরের আয় যা চলতি বছরে পাওয়া গেছে\nii. আর্থিক অবস্থার বিবরণীর দায়ের পাশে বসে\niii. আয়-ব্যয় হিসাবের ক্রেডিট পাশে চলতি বছরের চাঁদা থেকে বিয়োগ হয়\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "প্রারম্ভিক মূলধন তহবিল নির্ণয়ের সূত্র কোনটি?", opts: ['প্রারম্ভিক মোট সম্পদ - প্রারম্ভিক মোট দায়', 'সমাপনী মোট সম্পদ - সমাপনী মোট দায়', 'প্রারম্ভিক মোট সম্পদ - সমাপনী মোট দায়', 'সমাপনী মোট সম্পদ - প্রারম্ভিক মোট দায়'], correct: 0 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের সমাপনী আর্থিক অবস্থা জানার জন্য কোনটি প্রস্তুত করা হয়?", opts: ['প্রাপ্তি ও প্রদান হিসাব', 'আয়-ব্যয় হিসাব', 'আর্থিক অবস্থার বিবরণী', 'নগদ প্রবাহ বিবরণী'], correct: 2 },
+
+    // Page 11: বোর্ড ও শীর্ষস্থানীয় কলেজের বহুনির্বাচনি প্রশ্ন (১-১৫)
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের প্রধান উদ্দেশ্য কী?", opts: ['মুনাফা অর্জন', 'সমাজসেবা বা কল্যাণ', 'পণ্য উৎপাদন', 'ঋণ প্রদান'], correct: 1 },
+    { q: "নিচের কোনটি অব্যবসায়ী অমুনাফাভোগী প্রতিষ্ঠান?", opts: ['স্কুল', 'অংশীদারি কারবার', 'অডিট ফার্ম', 'বীমা কোম্পানি'], correct: 0 },
+    { q: "প্রাপ্তি ও প্রদান হিসাব কোন জাতীয় হিসাবের অনুরূপ?", opts: ['নগদান খতিয়ান/নগদান বই', 'আয়-ব্যয় হিসাব', 'লাভ-ক্ষতি হিসাব', 'রেওয়ামিল'], correct: 0 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবে কোন জাতীয় লেনদেন লিপিবদ্ধ হয়?", opts: ['কেবল মূলধনজাতীয়', 'কেবল মুনাফাজাতীয়', 'নগদ মূলধন ও মুনাফাজাতীয় উভয়ই', 'বকেয়া লেনদেন'], correct: 2 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবের সমাপনী উদ্বৃত্ত কী নির্দেশ করে?", opts: ['মূলধন তহবিল', 'সমাপনী হাতে নগদ ও ব্যাংক জমা', 'আয়াতিরিক্ত ব্যয়', 'ব্যয়াতিরিক্ত আয়'], correct: 1 },
+    { q: "আয়-ব্যয় হিসাব কোন হিসাবের অনুরূপ?", opts: ['লাভ-ক্ষতি হিসাব', 'লাভ-ক্ষতি আবন্টন হিসাব', 'নগদান হিসাব', 'উদ্বৃত্ত পত্র'], correct: 0 },
+    { q: "আয়-ব্যয় হিসাবে কোন জাতীয় লেনদেন লিপিবদ্ধ হয়?", opts: ['কেবল চলতি বছরের মুনাফাজাতীয় আয় ও ব্যয়', 'বিগত, চলতি ও পরবর্তী বছরের মুনাফাজাতীয় লেনদেন', 'মূলধনজাতীয় লেনদেন', 'নগদ ও বকেয়া সকল লেনদেন'], correct: 0 },
+    { q: "আয়-ব্যয় হিসাবের ক্রেডিট উদ্বৃত্ত (আয়ের অংশ ব্যয়ের চেয়ে বড় হলে) কী নির্দেশ করে?", opts: ['আয়াতিরিক্ত ব্যয়', 'ব্যয়াতিরিক্ত আয় (নিট মুনাফা/উদ্বৃত্ত)', 'মূলধন তহবিল', 'নগদ উদ্বৃত্ত'], correct: 1 },
+    { q: "অনাদায়ী বা বকেয়া চাঁদা অব্যবসায়ী প্রতিষ্ঠানের জন্য কী?", opts: ['চলতি সম্পদ', 'চলতি দায়', 'মুনাফাজাতীয় আয়', 'মূলধনজাতীয় ব্যয়'], correct: 0 },
+    { q: "অগ্রিম প্রাপ্ত চাঁদা অব্যবসায়ী প্রতিষ্ঠানের জন্য কী?", opts: ['চলতি সম্পদ', 'চলতি দায়', 'মুনাফাজাতীয় ব্যয়', 'মূলধনজাতীয় প্রাপ্তি'], correct: 1 },
+    { q: "আজীবন সভ্যদের চাঁদা এবং উইলকৃত ধনদৌলত সাধারণত কোন জাতীয় প্রাপ্তি?", opts: ['মুনাফাজাতীয় প্রাপ্তি', 'মূলধনজাতীয় প্রাপ্তি', 'সাময়িক প্রাপ্তি', 'সঞ্চিত তহবিল'], correct: 1 },
+    { q: "মূলধন তহবিল (Capital Fund) কীভাবে নির্ণয় করা হয়?", opts: ['প্রারম্ভিক মোট সম্পদ - প্রারম্ভিক মোট দায়', 'সমাপনী মোট সম্পদ - সমাপনী মোট দায়', 'মোট আয় - মোট ব্যয়', 'নগদ প্রাপ্তি - নগদ প্রদান'], correct: 0 },
+    { q: "একটি ক্লাবের খেলাধুলা সরঞ্জাম ক্রয়ের জন্য পাওয়া ১০,০০০ টাকা কী হিসেবে গণ্য হবে?", opts: ['বিশেষ তহবিল/মূলধনজাতীয় প্রাপ্তি', 'মুনাফাজাতীয় প্রাপ্তি', 'সাধারণ আয়', 'রেভিনিউ প্রাপ্তি'], correct: 0 },
+    { q: "কোনো ক্লাবের আজীবন সদস্যের চাঁদা কোথায় দেখানো হয়?", opts: ['আয়-ব্যয় হিসাবের ক্রেডিট পাশে', 'প্রাপ্তি ও প্রদান হিসাবের ক্রেডিট পাশে', 'আর্থিক অবস্থার বিবরণীর দায়ের পাশে', 'আর্থিক অবস্থার বিবরণীর সম্পদ পাশে'], correct: 2 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আয়াতিরিক্ত ব্যয় (Deficit) মূলধন তহবিলের সাথে কী করা হয়?", opts: ['যোগ করা হয়', 'বিয়োগ করা হয়', 'গুণ করা হয়', 'কোনো কাজ করা হয় না'], correct: 1 },
+
+    // Page 12: বোর্ড ও শীর্ষস্থানীয় কলেজের বহুনির্বাচনি প্রশ্ন (১৬-২৫)
+    { q: "একটি অমুনাফাভোগী প্রতিষ্ঠানের প্রারম্ভিক সম্পদ ১,৫০,০০০ টাকা এবং প্রারম্ভিক দায় ৫০,০০০ টাকা হলে প্রারম্ভিক মূলধন তহবিল কত?", opts: ['১,০০,০০০ টাকা', '২,০০,০০০ টাকা', '৫০,০০০ টাকা', '১,৫০,০০০ টাকা'], correct: 0 },
+    { q: "কোনো ক্লাবের চলতি বছরের প্রাপ্ত চাঁদা ৫০,০০০ টাকা। এর মধ্যে বিগত বছরের ৫,০০০ টাকা এবং পরবর্তী বছরের ৪,০০০ টাকা অন্তর্ভুক্ত আছে। চলতি বছরের বকেয়া চাঁদা ৩,০০০ টাকা হলে আয়-ব্যয় হিসাবে কত টাকা দেখাতে হবে?", opts: ['৪৪,০০০ টাকা', '৪৭,০০০ টাকা', '৪১,০০০ টাকা', '৫৪,০০০ টাকা'], correct: 0 },
+    { q: "একটি অমুনাফাভোগী প্রতিষ্ঠানের প্রাপ্তি ও প্রদান হিসাবে বেতন প্রদান দেওয়া আছে ১২,০০০ টাকা। প্রারম্ভিক বকেয়া বেতন ২,০০০ টাকা এবং সমাপনী বকেয়া বেতন ৩,০০০ টাকা হলে চলতি বছরের প্রকৃত বেতন খরচ কত?", opts: ['১৩,০০০ টাকা', '১১,০০০ টাকা', '১৫,০০০ টাকা', '১০,০০০ টাকা'], correct: 0 },
+    { q: "উইলকৃত ধনদৌলত কোনো নির্দিষ্ট শর্ত না থাকলে কোথায় দেখানো হয়?", opts: ['আয়-ব্যয় হিসাবে', 'আর্থিক অবস্থার বিবরণীর দায়ের পাশে মূলধন তহবিলের সাথে যোগ করে', 'প্রাপ্তি ও প্রদান হিসাবের ক্রেডিট পাশে', 'সম্পদ পাশে'], correct: 1 },
+    { q: "লকার ভাড়া (Locker Rent) অব্যবসায়ী প্রতিষ্ঠানের জন্য কী ধরনের আয়?", opts: ['মূলধনজাতীয় প্রাপ্তি', 'মুনাফাজাতীয় আয়', 'বিশেষ তহবিল', 'কোনোটিই নয়'], correct: 1 },
+    { q: "প্রাঙ্গণ উন্নয়ন (Ground Development) খরচ কী ধরনের ব্যয়?", opts: ['মুনাফাজাতীয় ব্যয়', 'মূলধনজাতীয় ব্যয়', 'বিলম্বিত মুনাফাজাতীয় ব্যয়', 'ব্যক্তিগত ব্যয়'], correct: 1 },
+    { q: "একটি অমুনাফাভোগী প্রতিষ্ঠানের আজীবন সদস্যের চাঁদা ২০,০০০ টাকা পাওয়া গেল যা ২০ বছরের জন্য। প্রতি বছর কত টাকা আয়-ব্যয় হিসাবে ক্রেডিট করতে হবে (যদি ক্লাবটি প্রতি বছর আনুপাতিক হারে আয় দেখানোর নীতি অনুসরণ করে)?", opts: ['১,০০০ টাকা', '২০,০০০ টাকা', '২,০০০ টাকা', '১০,০০০ টাকা'], correct: 0 },
+    { q: "প্রারম্ভিক মনিহারি ১,০০০ টাকা, চলতি বছরে মনিহারি ক্রয় ৫,০০০ টাকা এবং সমাপনী মনিহারি ১,৫০০ টাকা হলে চলতি বছরে মনিহারি ব্যবহারের পরিমাণ কত?", opts: ['৪,৫০০ টাকা', '৬,৫০০ টাকা', '৫,৫০০ টাকা', '৭,৫০০ টাকা'], correct: 0 },
+    { q: "অনুদান (Donation) যদি নিয়মিত ও ছোট অংকের হয়, তবে তা কী হিসেবে গণ্য হবে?", opts: ['মূলধনজাতীয় প্রাপ্তি', 'মুনাফাজাতীয় আয়', 'দায়', 'সম্পদ'], correct: 1 },
+    { q: "সমাপনী নগদ উদ্বৃত্ত ও সমাপনী ব্যাংক জমা কোথায় স্থানান্তরিত হয়?", opts: ['আয়-ব্যয় হিসাবে', 'আর্থিক অবস্থার বিবরণীর সম্পদ পাশে', 'মূলধন তহবিলে', 'দায় পাশে'], correct: 1 },
+
+    // Page 13: উদ্দীপকভিত্তিক ও সাধারণ বহুনির্বাচনি প্রশ্ন (২৬-৩৫)
+    { q: "সূর্যমুখী ক্লাবের ১ জানুয়ারি ২০১৬ তারিখে সম্পত্তির পরিমাণ ছিল: দালানকোঠা ৫০,০০০ টাকা, ১০% বিনিয়োগ ২০,০০০ টাকা, নগদ তহবিল ১০,০০০ টাকা। ওই বছর প্রাপ্তি ও প্রদান হিসাব হতে জানা যায়: চাঁদা প্রাপ্তি ৩০,০০০ টাকা, অনুদান ১০,০০০ টাকা (যার অর্ধেক মূলধনজাতীয়), লকার ভাড়া ২,০০০ টাকা। সূর্যমুখী ক্লাবের প্রারম্ভিক মূলধন তহবিল কত ছিল?", opts: ['৭০,০০০ টাকা', '৮৪০,০০০ টাকা', '৬০,০০০ টাকা', '৫০,০০০ টাকা'], correct: 1 },
+    { q: "সূর্যমুখী ক্লাবের উক্ত বছরের মোট মুনাফাজাতীয় আয়ের পরিমাণ কত?", opts: ['৪২,০০০ টাকা', '৩৭,০০০ টাকা', '৩৫,০০০ টাকা', '৩২,০০০ টাকা'], correct: 1 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের অবচয় (Depreciation) কোন হিসাবে দেখানো হয়?", opts: ['প্রাপ্তি ও প্রদান হিসাবের ক্রেডিট পাশে', 'আয়-ব্যয় হিসাবের ডেবিট পাশে', 'আর্থিক অবস্থার বিবরণীর দায়ের পাশে', 'সরাসরি মূলধন তহবিলের সাথে যোগ করা হয়'], correct: 1 },
+    { q: "নিচের কোনটি অনাদায়ী লেনদেন (Non-cash item) যা প্রাপ্তি ও প্রদান হিসাবে আসে না কিন্তু আয়-ব্যয় হিসাবে আসে?", opts: ['বকেয়া বেতন ও অবচয়', 'নগদ চাঁদা প্রাপ্তি', 'আসবাবপত্র ক্রয়', 'আজীবন সদস্যের চাঁদা'], correct: 0 },
+    { q: "আজীবন সদস্যের চাঁদা যদি মূলধনজাতীয় প্রাপ্তি হিসেবে গণ্য করা হয়, তবে তা কোথায় বসবে?", opts: ['আয়-ব্যয় হিসাবের ডেবিট দিকে', 'আর্থিক অবস্থার বিবরণীর দায়ের পাশে', 'আর্থিক অবস্থার বিবরণীর সম্পদ পাশে', 'প্রাপ্তি ও প্রদান হিসাবের ক্রেডিট দিকে'], correct: 1 },
+    { q: "একটি শিক্ষা প্রতিষ্ঠানের জন্য সরকারি অনুদান (যদি কোনো নির্দিষ্ট শর্ত না থাকে) সাধারণত কী?", opts: ['মুনাফাজাতীয় আয়', 'মূলধনজাতীয় প্রাপ্তি', 'চলতি দায়', 'স্থায়ী সম্পদ'], correct: 0 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের প্রধান আর্থিক বিবরণীসমূহ হলো—\ni. প্রাপ্তি ও প্রদান হিসাব\nii. আয়-ব্যয় হিসাব\niii. আর্থিক অবস্থার বিবরণী\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "কোন দফার বকেয়া বা অগ্রিম প্রাপ্তি ও প্রদান হিসাবে আসে না কিন্তু আয়-ব্যয় হিসাবে সমন্বয় করা হয়?", opts: ['বিগত ও আগামী বছরের নগদ প্রাপ্তি', 'চলতি বছরের বকেয়া খরচ ও অনাদায়ী আয়', 'মূলধনজাতীয় নগদ ব্যয়', 'কোনোটিই নয়'], correct: 1 },
+    { q: "মালপত্র বা পুরাতন খবরের কাগজ বিক্রয়লব্ধ অর্থ কী?", opts: ['মূলধনজাতীয় প্রাপ্তি', 'মুনাফাজাতীয় আয়', 'মূলধনজাতীয় ব্যয়', 'চলতি দায়'], correct: 1 },
+    { q: "ক্রীড়া ক্লাবের টুর্নামেন্ট তহবিল থেকে টুর্নামেন্টের খরচ বাদ দেওয়ার পর অবশিষ্টাংশ কোথায় দেখানো হয়?", opts: ['আয়-ব্যয় হিসাবে', 'আর্থিক অবস্থার বিবরণীর দায়ের পাশে সংশ্লিষ্ট তহবিলের অধীনে', 'সম্পদ পাশে', 'মূলধন তহবিলের সাথে সরাসরি যোগ করা হয়'], correct: 1 },
+
+    // Supplementary Questions to reach 50+ threshold
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আয়ের প্রধান উৎস কোনটি?", opts: ['প্রবেশ ফি', 'অনুদান', 'সদস্যদের চাঁদা', 'উইলিকৃত ধনদৌলত'], correct: 2 },
+    { q: "প্রাপ্তি ও প্রদান হিসাব সাধারণত কোন জের প্রকাশ করে?", opts: ['ডেবিট জের', 'ক্রেডিট জের', 'ডেবিট ও ক্রেডিট উভয়ই', 'কোনো জের প্রকাশ করে না'], correct: 0 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের নামিক হিসাব কোনটি?", opts: ['প্রাপ্তি ও প্রদান হিসাব', 'আয়-ব্যয় হিসাব', 'আর্থিক অবস্থার বিবরণী', 'নগদান বই'], correct: 1 },
+    { q: "মুনাফাজাতীয় আয়ের অংশ ব্যয় অপেক্ষা বেশি হলে তাকে কী বলে?", opts: ['আয়াতিরিক্ত ব্যয়', 'ব্যয়াতিরিক্ত আয়', 'নিট ক্ষতি', 'প্রারম্ভিক মূলধন'], correct: 1 },
+    { q: "নাট্যমঞ্চ তৈরিতে ৫,০০,০০০ টাকা ব্যয় হলে এটি কী ধরনের ব্যয়?", opts: ['মুনাফাজাতীয় ব্যয়', 'মূলধনজাতীয় ব্যয়', 'বিলম্বিত মুনাফাজাতীয় ব্যয়', 'পরিচালন ব্যয়'], correct: 1 },
+    { q: "কোনো ক্লাবের টুর্নামেন্ট তহবিলের জন্য প্রাপ্ত টাকা কোথায় দেখানো উচিত?", opts: ['আয়-ব্যয় হিসাবে', 'আর্থিক অবস্থার বিবরণীর দায়ের পাশে আলাদা তহবিল হিসেবে', 'সম্পদ পাশে', 'প্রাপ্তি ও প্রদান হিসাবের ক্রেডিট পাশে'], correct: 1 },
+    { q: "প্রারম্ভিক হাতে নগদ ও প্রারম্ভিক ব্যাংক জমা কোথায় বসে?", opts: ['প্রাপ্তি ও প্রদান হিসাবের ডেবিট পাশে শুরুতেই', 'আয়-ব্যয় হিসাবের ক্রেডিট পাশে', 'আর্থিক অবস্থার বিবরণীর সম্পদ পাশে', 'মূলধন তহবিলে'], correct: 0 },
+    { q: "নিচের কোনটি অলিখিত অনাগদ লেনদেন?", opts: ['আসবাবপত্রের অবচয়', 'বেতন প্রদান', 'চাঁদা প্রাপ্তি', 'লকার ভাড়া আদায়'], correct: 0 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের দায়সমূহ সাধারণত কোথায় বসে?", opts: ['আয়-ব্যয় হিসাবের ডেবিট পাশে', 'আর্থিক অবস্থার বিবরণীর দায়ের পাশে', 'প্রাপ্তি ও প্রদান হিসাবের ক্রেডিট পাশে', 'মূলধন তহবিলে'], correct: 1 },
+    { q: "অমুনাফাভোগী ব্যবসায়ী প্রতিষ্ঠান কোনটি?", opts: ['আইনজীবী চেম্বার', 'দাতব্য চিকিৎসালয়', 'ক্রীড়া ক্লাব', 'শিক্ষা প্রতিষ্ঠান'], correct: 0 },
+    { q: "অনাদায়ী চাঁদা বিগত বছরের হলে চলতি বছরের প্রাপ্ত চাঁদা থেকে কী করতে হয়?", opts: ['যোগ করতে হয়', 'বিয়োগ করতে হয়', 'গুণ করতে হয়', 'কোনো পরিবর্তন হয় না'], correct: 1 },
+    { q: "সমাপনী অগ্রিম প্রাপ্ত চাঁদা চলতি হিসাবকালের জন্য একটি—", opts: ['সম্পদ', 'দায়', 'আয়', 'ব্যয়'], correct: 1 },
+    { q: "ক্লাবের লাইব্রেরির জন্য বই ক্রয় করা হলে তা কী ধরনের ব্যয়?", opts: ['মুনাফাজাতীয় ব্যয়', 'মূলধনজাতীয় ব্যয়', 'নিয়মিত ব্যয়', 'পরিচালন ব্যয়'], correct: 1 },
+    { q: "প্রাঙ্গণ রক্ষকের মজুরি প্রদান কী ধরনের ব্যয়?", opts: ['মূলধনজাতীয় ব্যয়', 'মুনাফাজাতীয় ব্যয়', 'বিশেষ ব্যয়', 'বিলম্বিত মুনাফাজাতীয় ব্যয়'], correct: 1 },
+    { q: "আজীবন সদস্যের চাঁদা এককালীন নেওয়া হলে তা কোন তহবিলে স্থানান্তরিত হয়?", opts: ['সাধারণ তহবিল', 'মূলধন তহবিল বা দায় পাশে আলাদাভাবে', 'লাভ-ক্ষতি তহবিল', 'কোনোটিই নয়'], correct: 1 },
+    { q: "উইলকৃত সম্পত্তি নির্দিষ্ট কোনো উদ্দেশ্যের জন্য হলে তা কী হিসেবে গণ্য হবে?", opts: ['সাধারণ আয়', 'বিশেষ দায় বা তহবিল', 'চলতি সম্পদ', 'মুনাফাজাতীয় প্রাপ্তি'], correct: 1 },
+    { q: "কোনো দাতব্য হাসপাতালের এক্স-রে মেশিন ক্রয় কোন জাতীয় ব্যয়?", opts: ['মুনাফাজাতীয় ব্যয়', 'মূলধনজাতীয় ব্যয়', 'বিলম্বিত ব্যয়', 'সাধারণ খরচ'], correct: 1 },
+   
+ // Page 7: জ্ঞানমূলক ও সাধারণ বহুনির্বাচনি প্রশ্ন (১-১৮)
+    { q: "যদি কোনো ক্লাবের একজন আজীবন সদস্য মারা যান তাহলে তার নিকট হতে প্রাপ্ত চাঁদা কোথায় স্থানান্তর করা উচিত?", opts: ['আয় বিবরণীতে', 'প্রাপ্তি ও প্রদান হিসাবে', 'প্রারম্ভিক মূলধন তহবিলে', 'সমাপনী মূলধন তহবিলে'], correct: 0 },
+    { q: "বর্তমানে ২৫ বছর বয়সী জনাব 'এক্স'-এর নিকট হতে সোনালী ক্লাব আজীবন সদস্যের চাঁদা বাবদ ২,৪০,০০০ টাকা গ্রহণ করে। জনাব 'এক্স'-এর আনুমানিক আয়ুষ্কাল ৮৫ বছর। প্রতি বছর কত টাকা করে মুনাফাজাতীয় আয় হিসাবে দেখাতে হবে?", opts: ['৯,৬০০ টাকা', '৪,০০০ টাকা', '২,৫২৩.৭৩ টাকা', '২,১৮১.৮২ টাকা'], correct: 1 },
+    { q: "নকশী ক্লাবের হিসাব হতে নিম্নোক্ত তথ্যাবলি নেওয়া হয়েছে: ৩১ ডিসেম্বর, ২০১৮: প্রাপ্তি ও প্রদান হিসাবের উদ্বৃত্ত ১২,০০০ টাকা, আসবাবপত্র ৪০,০০০ টাকা, ১৫% বিনিয়োগ ৬০,০০০ টাকা। ২০১৮ সালের বকেয়া বেতন ও বকেয়া ভাড়া যথাক্রমে ৪,০০০ ও ১,২০০ টাকা ২০১৯ সালে পরিশোধ করা হয়। ২০১৯ সালে প্রাপ্ত চাঁদার মধ্যে ৫,৪০০ টাকা বিগত বছরের। ২০১৯ সালের জানুয়ারি ০১ তারিখের মূলধন তহবিলের পরিমাণ কত?", opts: ['১,১৭,৪০০ টাকা', '১,১২,২০০ টাকা', '১,০৬,৮০০ টাকা', '৮৮,২০০ টাকা'], correct: 1 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আয়ের অন্যতম উৎস কোনটি?", opts: ['অনুদান', 'ভর্তি ফি', 'লকার ভাড়া', 'ম্যাগাজিন বিক্রয়'], correct: 0 },
+    { q: "মূলধন তহবিল বলতে কী বুঝ?", opts: ['সম্পত্তি ও দায় হিসাব', 'সম্পত্তি ও দায়ের পার্থক্য', 'আয় ও ব্যয়ের হিসাব', 'নগদ প্রাপ্তি ও প্রদানের পার্থক্য'], correct: 1 },
+    { q: "চলতি বছরের বকেয়া বেতন খরচ ৩,০০০ টাকা এবং গত বছরের বকেয়া বেতন ২,৫০০ টাকা, প্রাপ্তি প্রদান হিসাবের বেতনের খরচের পরিমাণ ১৩,০০০ টাকা। বেতন খরচের পরিমাণ কত?", opts: ['১০,৫০০ টাকা', '১৩,৫০০ টাকা', '১৫,৫০০ টাকা', '১৬,৫০০ টাকা'], correct: 1 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের প্রারম্ভিক মোট দায় অপেক্ষা প্রারম্ভিক মোট সম্পত্তির বাড়তিকে কী বলা হয়?", opts: ['মালিকানা তহবিল', 'উদ্বৃত্ত তহবিল', 'মূলধন তহবিল', 'সংরক্ষিত তহবিল'], correct: 2 },
+    { q: "প্রাপ্তি ও প্রদান হিসাব সাধারণত কোন জের প্রকাশ করে?", opts: ['ক্রেডিট জের', 'ডেবিট জের', 'শূন্য জের', 'ডেবিট জের অথবা ক্রেডিট জের'], correct: 1 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠান হিসেবে কোনো ক্লাবের আয়ের প্রধান উৎস কোনটি?", opts: ['প্রবেশ ফি', 'সদস্যদের চাঁদা', 'অনুদান', 'পুরাতন খবরের কাগজ বিক্রয়'], correct: 1 },
+    { q: "মূলধনজাতীয় প্রাপ্তি ও প্রদান দ্বারা কী বুঝায়?", opts: ['দায় ও ব্যয়', 'দায় ও সম্পদ', 'আয় ও ব্যয়', 'আয় ও সম্পদ'], correct: 1 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের নগদান বই বলতে বুঝায়?", opts: ['নগদ প্রাপ্তি বই', 'নগদ প্রদান বই', 'নগদ প্রাপ্তি ও প্রদান বই', 'নগদ সংগ্রহ বই'], correct: 2 },
+    { q: "চলতি বছরে চাঁদা প্রাপ্তি ৬০,০০০ টাকা, যার মধ্যে ৬,০০০ টাকা বিগত বছরের এবং ৮,০০০ টাকা পরবর্তী বছরের। চলতি বছরের আয়-ব্যয় হিসাবে চাঁদা বাবদ কত টাকা প্রদর্শিত হবে? (চলতি বছরের চাঁদা ১০,০০০ টাকা অনাদায়ী রয়েছে।)", opts: ['৫২,০০০ টাকা', '৫৬,০০০ টাকা', '৭২,০০০ টাকা', '৭৮,০০০ টাকা'], correct: 1 },
+    { q: "প্রাপ্তি-প্রদান হিসাবের উদ্বৃত্ত বলতে কী বুঝায়?", opts: ['সম্পদ', 'দায়', 'আয়', 'ব্যয়'], correct: 0 },
+    { q: "মূলধন তহবিল অব্যবসায় প্রতিষ্ঠানের জন্য একটি—", opts: ['বহির্দায়', 'অন্তর্দায়', 'সম্পত্তি', 'আয়'], correct: 1 },
+    { q: "আয়ব্যয় হিসাবে কোনটি দেখানো হয় না?", opts: ['লকার ভাড়া', 'চাঁদা', 'প্রাঙ্গণ রক্ষণাবেক্ষণ', 'প্রাঙ্গণ উন্নয়ন'], correct: 3 },
+    { q: "কোনটি মূলধনজাতীয় ব্যয়?", opts: ['ভাড়া', 'বেতন', 'আসবাবপত্র ক্রয়', 'মনিহারি ক্রয়'], correct: 2 },
+    { q: "নিচের কোন দফাটি প্রাপ্তি ও প্রদান হিসাবের অন্তর্ভুক্ত নয়?", opts: ['অগ্রিম চাঁদা', 'বকেয়া চাঁদা', 'অনুদান', 'উইলকৃত ধনদৌলত'], correct: 1 },
+    { q: "উষা সেবা সংঘের মোট সদস্যসংখ্যা ৮৯০ জন। বার্ষিক চাঁদার হার সদস্য প্রতি ৫০ টাকা। চলতি বছরে ৪০ জন সদস্য এখনও চাঁদা প্রদান করেনি। আয়ব্যয় হিসাবে চাঁদা বাবদ কত টাকা দেখানো যাবে?", opts: ['৪০,০০০ টাকা', '৪২,০০০ টাকা', '৪৪,৫০০ টাকা', '৪৫,০০০ টাকা'], correct: 2 },
+
+    // Page 8: সাধারণ বহুনির্বাচনি প্রশ্ন (১৯-৪২)
+    { q: "অব্যবসায়ী প্রতিষ্ঠানসমূহের আয়ের প্রধান উৎস—", opts: ['পণ্য বিক্রয়', 'সেবা প্রদান', 'চাঁদা', 'অনুদান'], correct: 2 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আয়ের প্রধান উৎস নিচের কোনটি?", opts: ['ম্যাগাজিন বিক্রয়', 'অনুদান', 'সদস্যদের চাঁদা', 'প্রবেশ ফি'], correct: 2 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের মূলধন তহবিল নির্ণয় করতে নিচের কোন দফাটি বিয়োগ করতে হবে?", opts: ['বিগত বছর অগ্রিম বেতন ৩,৬০০ টাকা', 'বিগত বছর সদস্যগণের অপরিশোধিত চাঁদার পরিমাণ ৩,৬০০ টাকা', 'বিগত বছর প্রদত্ত তিন মাসের অগ্রিম বিমার পরিমাণ ৩,৬০০ টাকা', 'বিগত বছরের মনিহারি বাবদ অপরিশোধিত ৩,৬০০ টাকা'], correct: 3 },
+    { q: "কোনটি মূলধনজাতীয় ব্যয়?", opts: ['আসবাবপত্র ক্রয়', 'কোमल পানীয় ক্রয়', 'মনিহারি দ্রব্যাদি ক্রয়', 'খাদ্যদ্রব্য ক্রয়'], correct: 0 },
+    { q: "আজীবন সদস্যের চাঁদা—", opts: ['মুনাফাজাতীয় আয়', 'মূলধনজাতীয় আয়', 'সম্পদ', 'মুনাফাজাতীয় ব্যয়'], correct: 1 },
+    { q: "অব্যবসায়ীদের প্রতিষ্ঠানের নগদ অবস্থা জানা যায় কোন হিসাবের মাধ্যমে?", opts: ['আয়ব্যয় হিসাব', 'প্রাপ্তি প্রদান হিসাব', 'মূলধন হিসাব', 'উদ্বৃত্তপত্র'], correct: 1 },
+    { q: "পরবর্তী বছরের চাঁদা চলতি বছর পাওয়া গেলে অব্যবসায়ী প্রতিষ্ঠানের কাছে কী হিসেবে বিবেচিত হয়?", opts: ['আয়', 'ব্যয়', 'সম্পদ', 'দায়'], correct: 3 },
+    { q: "চলতি বছরের প্রাপ্ত চাঁদা ২০,০০০ টাকা যার মধ্যে বিগত বছরের ২,০০০ টাকা এবং পরবর্তী বছরের ৩,০০০ টাকা অন্তর্ভুক্ত আছে। এ ছাড়া চলতি বছরে চাঁদা ৪,০০০ টাকা বকেয়া আছে। চলতি বছরের আয়ব্যয় হিসাবে চাঁদা আয় কত টাকা দেখানো হবে?", opts: ['২১,০০০ টাকা', '১৯,০০০ টাকা', '১৮,০০০ টাকা', '১১,০০০ টাকা'], correct: 1 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের উদ্দেশ্য কোনটি?", opts: ['মুনাফা অর্জনের উদ্দেশ্যে পণ্য ক্রয়-বিক্রয় করা', 'মুনাফা অর্জনের উদ্দেশ্যে পণ্য উৎপাদন ও বণ্টন করা', 'সদস্যদের সেবা ও জনকল্যাণমূলক কাজ', 'শেয়ার ও ঋণপত্র ক্রয়-বিক্রয় করা'], correct: 2 },
+    { q: "ব্যায়াতিরিক্ত আয় হয়—", opts: ['মোট আয় মোট ব্যয়ের চেয়ে বেশি হলে', 'মোট ব্যয় মোট আয়ের চেয়ে বেশি হলে', 'মোট মুনাফাজাতীয় আয় মোট মুনাফাজাতীয় ব্যয়ের চেয়ে বেশি হলে', 'মোট মুনাফাজাতীয় ব্যয় মোট মুনাফাজাতীয় আয়ের চেয়ে বেশি হলে'], correct: 2 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আয়ের উৎস কী?", opts: ['सरकारी অর্থ', 'চাঁদা ও অনুদান', 'ব্যাংক ঋণ', 'বিনিয়োগ'], correct: 1 },
+    { q: "ডাক্তার, ইঞ্জিনিয়ার, আইনজীবী প্রভৃতি পেশাজীবীদের প্রতিষ্ঠান কোন ধরনের প্রতিষ্ঠানের উদাহরণ?", opts: ['মুনাফাভোগী অব্যবসায়ী', 'মুনাফাভোগী ব্যবসায়ী', 'অমুনাফাভোগী অব্যবসায়ী', 'অমুনাফাভোগী ব্যবসায়ী'], correct: 0 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবে মজুরি বাবদ প্রদান ৫০,০০০ টাকা, যার মধ্যে অগ্রিম মজুরি ২,০০০ টাকা। বছর শেষে মোট মজুরির ১/৬ অংশ বকেয়া থাকলে সংশ্লিষ্ট মোট মজুরি ও বকেয়া মজুরির পরিমাণ হবে—", opts: ['৫০,০০০ ও ১০,০০০ টাকা', '৫০,০০০ ও ১২,৫০০ টাকা', '৬০,০০০ ও ১০,০০০ টাকা', '৬০,০০০ ও ১২,০০০ টাকা'], correct: 3 },
+    { q: "নিচের কোনটি মুনাফাজাতীয় ব্যয়?", opts: ['আসবাবপত্র আনয়ন পরিবহন ব্যয়', 'আসবাবপত্র ক্রয়', 'আসবাবপত্র মেরামত ব্যয়', 'ক্লাবের জন্য টিভি ক্রয়'], correct: 2 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবে ৬০,০০০ টাকা এবং বছরের শেষ পর্যন্ত ভাড়া ১/৫ বকেয়া থাকলে মোট ভাড়ার পরিমাণ কত?", opts: ['৪৫,০০০ টাকা', '৪৮,০০০ টাকা', '৭২,০০০ টাকা', '৭৫,০০০ টাকা'], correct: 3 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবের ডেবিট উদ্বৃত্ত দ্বারা কী বুঝায়?", opts: ['ব্যয়াতিরিক্ত আয়', 'আয়াতিরিক্ত ব্যয়', 'হাতে নগদ ও ব্যাংকে জমার উদ্বৃত্ত', 'ব্যাংক জমাতিরিক্ত'], correct: 2 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আয়ের উৎস কোনটি?", opts: ['বিক্রয় আয়', 'সেবা আয়', 'সুদ আয়', 'সদস্যদের চাঁদা'], correct: 3 },
+    { q: "পুরাতন সম্পদ বিক্রয় কী ধরনের আয়?", opts: ['মুনাফাজাতীয় আয়', 'মুনাফাজাতীয় প্রাপ্তি', 'মূলধনজাতীয় প্রাপ্তি', 'মূলধনজাতীয় আয়'], correct: 2 },
+    { q: "নিচের কোনটি মুনাফা জাতীয় খরচ?", opts: ['চাঁদা', 'হলরুম ভাড়া', 'লকার ভাড়া', 'প্রাঙ্গণ রক্ষকের মজুরি'], correct: 3 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের মূলধন তহবিল বলতে কী বোঝায়?", opts: ['একটি নির্দিষ্ট সময়ের আয় ও ব্যয়ের পার্থক্য', 'একটি নির্দিষ্ট সময়ের সম্পদ ও দায়ের পার্থক্য', 'একটি নির্দিষ্ট দিনের সম্পদ ও দায়ের পার্থক্য', 'একটি নির্দিষ্ট দিনের প্রাপ্তি ও প্রদানের পার্থক্য'], correct: 2 },
+    { q: "প্রাপ্তি প্রদান হিসাবের উদ্বৃত্তকে কি বলা হয়?", opts: ['আয়', 'খরচ', 'দায়', 'সম্পদ'], correct: 3 },
+    { q: "বকেয়া খরচ হিসাবকালের কোন জাতীয় হিসাব?", opts: ['আয় ও দায়', 'খরচ ও দায়', 'খরচ ও আয়', 'সম্পদ ও আয়'], correct: 1 },
+    { q: "আয়ব্যয় হিসাবের ক্রেডিট জের ব্যবসায় প্রতিষ্ঠানের কি হিসাবে গণ্য হয়?", opts: ['মোট লাভ', 'মোট ক্ষতি', 'নিট লাভ', 'নিট ক্ষতি'], correct: 2 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের আর্থিক অবস্থার বিবরণী তৈরি করা হয়—", opts: ['মাসের শেষে', 'বছরের শেষে', 'একটি নির্দিষ্ট তারিখে', 'ছয় মাস শেষে'], correct: 2 },
+
+    // Page 9: সাধারণ বহুনির্বাচনি প্রশ্ন (৪৩-৬০)
+    { q: "কোন মূলধনের উপর সুদ ধার্য হয়?", opts: ['প্রারম্ভিক মূলধন', 'সমাপনী মূলধন', 'অতিরিক্ত মূলধন', 'বিনিয়োজিত মূলধন'], correct: 0 },
+    { q: "মূলধন তহবিল থেকে কোনটি বিয়োগ করতে হবে?", opts: ['আয়াতিরিক্ত ব্যয়', 'সমাপনী নগদ উদ্বৃত্ত', 'মোট আয়', 'চাঁদা'], correct: 0 },
+    { q: "প্রাপ্তি-প্রদান হিসাবে কোনটি অন্তর্ভুক্ত হয়?", opts: ['মূলধনজাতীয় প্রাপ্তি ও প্রদান', 'মুনাফাজাতীয় প্রাপ্তি ও প্রদান', 'মূলধন ও মুনাফাজাতীয় আয়ব্যয়', 'সকল নগদ প্রাপ্তি ও নগদ প্রদান'], correct: 3 },
+    { q: "একটি অব্যবসায়ী প্রতিষ্ঠানের প্রাপ্তি-প্রদান হিসেবে ডেবিট দিকে বিনিয়োগের সুদ দেওয়া আছে বার্ষিক ১৬% হারে ২,৪০০ টাকা। ক্রেডিট দিকে কোনো বিনিয়োগ নেই। প্রারম্ভিক বিনিয়োগ কত?", opts: ['১৫,০০০ টাকা', '২৫,০০০ টাকা', '৩২,০০০ টাকা', '৪৮,০০০ টাকা'], correct: 0 },
+    { q: "কোনটি বিশেষ তহবিল নয়?", opts: ['বৃত্তি তহবিল', 'মূলধন তহবিল', 'ত্রাণ তহবিল', 'ক্রীড়া তহবিল'], correct: 1 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের প্রধান উদ্দেশ্য কী?", opts: ['মুনাফা অর্জন করা', 'পণ্য বা সেবা বিনিময় করা', 'সদস্যদের মধ্যে মুনাফা বণ্টন', 'সদস্য ও জনগণের সেবা দান'], correct: 3 },
+    { q: "আয়ব্যয় হিসেবে কোনটি দেখানো হয় না?", opts: ['প্রাঙ্গণ উন্নয়ন', 'প্রাঙ্গণ রক্ষণাবেক্ষণ', 'প্রাঙ্গণ কর', 'প্রাঙ্গণ রক্ষকের মজুরি'], correct: 0 },
+    { q: "কোন প্রতিষ্ঠানে আয়ব্যয় হিসাব প্রস্তুত করা হয়?", opts: ['একমালিকানা', 'অংশীদারি', 'কোম্পানি', 'অব্যবসায়ী'], correct: 3 },
+    { q: "নিচের কোনটি প্রাপ্তি-প্রদান হিসেবে অন্তর্ভুক্ত হয় না?", opts: ['অগ্রিম চাঁদা প্রাপ্তি', 'বকেয়া চাঁদা', 'বিগত বছরের বকেয়া চাঁদা প্রাপ্তি', 'চলতি বছরের চাঁদা প্রাপ্তি'], correct: 1 },
+    { q: "কোনটি অব্যবসায়ী প্রতিষ্ঠানের মূলধনজাতীয় ব্যয়?", opts: ['সচিবের বেতন', 'বই ক্রয়', 'মনিহারি', 'বিদ্যুৎ খরচ'], correct: 1 },
+    { q: "অব্যবসায়ী মুনাফাভোগী প্রতিষ্ঠান কোনটি?", opts: ['প্রকৌশলী কনসালটেন্ট ফার্ম', 'ক্লাব', 'শিক্ষা প্রতিষ্ঠান', 'হাসপাতাল'], correct: 0 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবের উদ্বৃত্তকে কী বলা হয়?", opts: ['ব্যয়', 'আয়', 'দায়', 'সম্পদ'], correct: 3 },
+    { q: "নিচের কোনটি মূলধনজাতীয় প্রাপ্তি?", opts: ['চাঁদা প্রাপ্তি', 'সুদ প্রাপ্তি', 'উপভাড়া প্রাপ্তি', 'অনুদান'], correct: 3 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের মূলধনজাতীয় ব্যয় কোনটি?", opts: ['সচিবের বেতন', 'মনিহারি ক্রয়', 'বিদ্যুৎ খরচ', 'খেলাধুলার সরঞ্জাম ক্রয়'], correct: 3 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবের ডেবিট উদ্বৃত্ত দ্বারা কী বুঝায়?", opts: ['আয়াতিরিক্ত ব্যয়', 'ব্যয়াতিরিক্ত আয়', 'হাতে নগদ ও ব্যাংক জমার সমাপনী জের', 'নগদপ্রাপ্তি ও বকেয়া খরচ সম্পর্কিত লেনদেন'], correct: 2 },
+    { q: "প্রাপ্তি ও প্রদান হিসাবের উদ্বৃত্ত কী নির্দেশ করে?", opts: ['মূলধন তহবিল', 'মোট প্রাপ্তি', 'মোট প্রদান', 'নগদ তহবিল'], correct: 3 },
+    { q: "অব্যবসায়ী প্রতিষ্ঠানের প্রধান উদ্দেশ্য কোনটি?", opts: ['মুনাফা অর্জন করা', 'সদস্য ও জনগণের সেবা দান', 'পণ্য ও সেবার বিনিময় করা', 'সদস্যদের মধ্যে মুনাফা বণ্টন'], correct: 1 },
+    { q: "খাদ্যসামগ্রী ক্রয় ১০,০০০ টাকা, প্রারম্ভিক খাদ্যসামগ্রী ২,০০০ টাকা, ব্যবহৃত খাদ্যসামগ্রী ৮,০০০ টাকা হলে অব্যবহৃত খাদ্যসামগ্রীর পরিমাণ কত?", opts: ['২,০০০ টাকা', '৪,০০০ টাকা', '৬,০০০ টাকা', '১৬,০০০ টাকা'], correct: 1 }
+
+],
 'acc2_ch2': [{ q: 'অংশীদারি ব্যবসায়ের চুক্তিপত্রকে কী বলে?', opts: ['পার্টনারশিপ ডিড', 'মেমোরেন্ডাম', 'আর্টিকেল', 'প্রস্পেক্টাস'], correct: 0 }],
 'acc2_ch3': [{ q: 'নগদ প্রবাহ বিবরণীতে কোনটি অন্তর্ভুক্ত হয় না?', opts: ['পরিচালন কার্যক্রম', 'বিনিয়োগ কার্যক্রম', 'অর্থায়ন কার্যক্রম', 'অবমূল্যায়ন'], correct: 3 }],
 'acc2_ch4': [{ q: 'শেয়ারের মুখ্যমূল্য ও ইস্যুমূল্যের পার্থক্যকে কী বলে?', opts: ['ডিসকাউন্ট', 'প্রিমিয়াম', 'বোনাস', 'ডিভিডেন্ড'], correct: 1 }],
@@ -482,7 +960,331 @@ const QB={
 'acc2_ch8': [{ q: 'মজুত পণ্য মূল্যায়নের জন্য কোন পদ্ধতি ব্যবহৃত হয় না?', opts: ['FIFO', 'LIFO', 'Simple Average', 'HIFO'], correct: 3 }],
 'acc2_ch9': [{ q: 'স্থির ব্যয় কোনটি?', opts: ['কাঁচামাল ব্যয়', 'মজুরি', 'ভাড়া', 'কমিশন'], correct: 2 }],
 'acc2_ch10': [{ q: 'ব্যবস্থাপনা হিসাববিজ্ঞানের মূল লক্ষ্য কী?', opts: ['সরকারকে তথ্য দেওয়া', 'মালিককে তথ্য দেওয়া', 'ব্যবস্থাপকদের সিদ্ধান্ত নিতে সাহায্য করা', 'কর নির্ধারণ করা'], correct: 2 }],
-'fin1_ch1': [{ q: 'অর্থায়নের সংজ্ঞায় কাকে Finance-এর জনক বলা হয়?', opts: ['হেনরি ফয়ল', 'এফ.ডব্লিউ. টেইলর', 'গুথম্যান ও ডগল', 'কুন্স ও ওডনেল'], correct: 2 }],
+'fin1_ch1': [{ q: 'অর্থায়নের সংজ্ঞায় কাকে Finance-এর জনক বলা হয়?', opts: ['হেনরি ফয়ল', 'এফ.ডব্লিউ. টেইলর', 'গুথম্যান ও ডগল', 'কুন্স ও ওডনেল'], correct: 2 },
+
+
+  {
+    q: "১. আধুনিক অর্থায়নের সূচনা যুগ কোনটি?",
+    opts: ["১৯৪০-১৯৫০ দশক", "১৯৫০-১৯৬০ দশক", "১৯৬০-১৯৭০ দশক", "১৯৭০-১৯৮০ দশক"],
+    correct: 2
+  },
+  {
+    q: "২. কোনো ব্যক্তির আয়-ব্যয় নিয়ে যে অর্থায়নে আলোচনা করা হয় তাকে কী বলা হয়?",
+    opts: ["অব্যবসায় অর্থায়ন", "ব্যক্তিগত অর্থায়ন", "সরকারি অর্থায়ন", "আন্তর্জাতিক অর্থায়ন"],
+    correct: 1
+  },
+  {
+    q: "৩. সরকারি অর্থায়নের প্রধান উদ্দেশ্য হলো—",
+    opts: ["মুনাফা সর্বোচ্চকরণ", "সম্পদ সর্বোচ্চকরণ", "জনকল্যাণ", "ব্যবসায় সম্প্রসারণ"],
+    correct: 2
+  },
+  {
+    q: "৪. নিচের কোন কাজটি অর্থায়নের সাথে জড়িত?",
+    opts: ["অর্থ সংরক্ষণ", "bank নিয়ন্ত্রণ", "তথ্য সরবরাহ", "ব্যাংক হিসাব খোলা"],
+    correct: 0
+  },
+  {
+    q: "৫. সম্পদ সর্বাধিকরণে নিচের কোনটি বিবেচনা করা হয় না?",
+    opts: ["শেয়ার মূল্য বৃদ্ধি", "ঝুঁকির পরিমাণ", "স্বল্পমেয়াদি মুনাফা", "নগদ প্রবাহ"],
+    correct: 2
+  },
+  {
+    q: "৬. একটি দেশের জনগণের কল্যাণের উদ্দেশ্যে যে অর্থায়ন করা হয় তাকে কী বলে?",
+    opts: ["সরকারি অর্থায়ন", "ব্যক্তিগত অর্থায়ন", "ব্যবসায় অর্থায়ন", "আন্তর্জাতিক অর্থায়ন"],
+    correct: 0
+  },
+  {
+    q: "৭. অর্থায়নের মূল বিষয়বস্তু কী?",
+    opts: ["শ্রম", "পরিকল্পনা", "তহবিল", "উৎপাদন"],
+    correct: 2
+  },
+  {
+    q: "৮. নিচের কোনটি ব্যবসায় অর্থায়নের কাজ?",
+    opts: ["আয় বিবরণী প্রস্তুত করা", "আর্থিক অবস্থার বিবরণী প্রস্তুত করা", "আর্থিক সঠিক ব্যবহার নিশ্চিত করা", "পণ্য উৎপাদন ও বণ্টন করা"],
+    correct: 2
+  },
+  {
+    q: "৯. অর্থায়নের সাথে অর্থনীতির কোন শাখার সম্পর্ক আছে?",
+    opts: ["ব্যাষ্টিক", "সামষ্টিক", "সামগ্রিক", "social"],
+    correct: 1
+  },
+  {
+    q: "১০. মেয়াদের ভিত্তিতে অর্থায়নকে কয় ভাগে ভাগ করা হয়?",
+    opts: ["১", "২", "৩", "৪"],
+    correct: 2
+  },
+  {
+    q: "১১. একটা দেশের সরকার যদি উন্নয়নমূলক কোনো কাজ করতে চায়, তাহলে তারা কীভাবে এর অর্থায়ন করবে?",
+    opts: ["নিজস্ব অর্থায়ন", "সরকারি অর্থায়ন", "বে-সরকারি অর্থায়ন", "আন্তর্জাতিক অর্থায়ন"],
+    correct: 1
+  },
+  {
+    q: "১২. বিনিময়ের মাধ্যম হিসেবে সর্বজন গ্রহণযোগ্য দ্রবকে কী বলে?",
+    opts: ["অর্থ", "মুনাফা", "আয়", "ব্যয়"],
+    correct: 0
+  },
+  {
+    q: "১৩. অব্যবসায় প্রতিষ্ঠানের অর্থায়নের উদ্দেশ্য কী?",
+    opts: ["বিনিয়োগ", "মুনাফা অর্জন", "মুনাফা বণ্টন", "সামাজিক কল্যাণ"],
+    correct: 3
+  },
+  {
+    q: "১৪. একটি ফার্মের অর্থায়নের চূড়ান্ত লক্ষ্য কোনটি?",
+    opts: ["মুনাফা সর্বাধিকরণ", "সম্পদ সর্বাধিকরণ", "সামাজিক কল্যাণ", "ব্যবসায় সম্প্রসারণ"],
+    correct: 1
+  },
+  {
+    q: "১৬. মুনাফা অর্জনের উদ্দেশ্যে যে অর্থায়ন করা হয় তাকে কী বলে?",
+    opts: ["ব্যক্তিগত অর্থায়ন", "সরকারি অর্থায়ন", "ব্যবসায় অর্থায়ন", "অব্যবসায় অর্থায়ন"],
+    correct: 2
+  },
+  {
+    q: "১৭. নিচের কোনটি অর্থের সময় মূল্য বিবেচনা করে?",
+    opts: ["মূল্য সর্বোচ্চকরণ", "মুনাফা সর্বোচ্চকরণ", "সম্পদ সর্বোচ্চকরণ", "মূলধন সর্বোচ্চকরণ"],
+    correct: 2
+  },
+  {
+    q: "১৮. একাধিক লাভজনক প্রকল্পে বিনিয়োগ করা হলে তাকে কী বলা হয়?",
+    opts: ["অর্থের সময় মূল্য नीति", "তারল্য নীতি", "পোর্টফোলিও নীতি", "উপযুক্ততার নীতি"],
+    correct: 2
+  },
+  {
+    q: "১৯. সম্পদ সর্বাধিকরণ বলতে বুঝায়—",
+    opts: ["শেয়ার প্রতি আয় বৃদ্ধি", "শেয়ারের বাজার মূল্য বৃদ্ধি", "পরিচালন আয় বৃদ্ধি", "বিক্রয় বৃদ্ধি"],
+    correct: 1
+  },
+  {
+    q: "২০. যে কার্যক্রমের মাধ্যমে শেয়ারহোল্ডারদের নীট বর্তমান মূল্য বৃদ্ধি পায় তাকে কী বলে?",
+    opts: ["মুনাফা সর্বাধিকরণ", "সম্পদ সর্বাধিকরণ", "ঝুঁকি হ্রাসকরণ", "ব্যয় সংকোচন"],
+    correct: 1
+  },
+  {
+    q: "২১. স্বায়ত্তশাসিত প্রতিষ্ঠান বা কর্পোরেশনের অর্থায়নের ধরন কোনটি?",
+    opts: ["ব্যক্তিগত অর্থায়ন", "ব্যবসায় অর্থায়ন", "সরকারি অর্থায়ন", "অব্যবসায় অর্থায়ন"],
+    correct: 1
+  },
+  {
+    q: "২২. ব্যবসায় পর্যাপ্ত পরিমাণ অর্থ হাতে রাখার কারণ কী?",
+    opts: ["তারল্য সংকট মোকাবেলা করা", "ভবিষ্যৎ ক্রয় কার্য সম্পাদন করা", "অতিরিক্ত বিনিয়োগ করা", "ব্যবসায়ের সচ্ছলতা প্রকাশ করা"],
+    correct: 0
+  },
+  {
+    q: "২৩. মুনাফা সর্বাধিকরণে কোনটি বিবেচনা করা হয়?",
+    opts: ["অর্থের সময় মূল্য", "প্রকল্পের ঝুঁকি", "প্রকল্পের নগদ প্রবাহ", "প্রকল্পের মোট আয়"],
+    correct: 3
+  },
+  {
+    q: "২৪. নগদ টাকা এবং নগদ সমতুল্য হাতে রাখার মূল উদ্দেশ্য কোনটি?",
+    opts: ["মুনাফা", "আয়", "উদ্বৃত্ত", "তারল্য"],
+    correct: 3
+  },
+  {
+    q: "২৫. যে কোন প্রতিষ্ঠানের সবচেয়ে তরল সম্পদ কোনটি?",
+    opts: ["স্বর্ণ", "নগদ অর্থ", "ভূমি", "আসবাবপত্র"],
+    correct: 1
+  },
+  {
+    q: "২৬. কোনটি অর্থায়ন কার্যাবলির অন্তর্ভুক্ত নয়?",
+    opts: ["আর্থিক পরিকল্পনা", "ব্যবস্থাপনা সংক্রান্ত", "বিনিয়োগ সিদ্ধান্ত", "মূল্য নির্ধারণ"],
+    correct: 3
+  },
+  {
+    q: "২৭. নিচের কোন নীতি অনুসরণ করে ঝুঁকি হ্রাস করা হয়?",
+    opts: ["লভ্যাংশ নীতি", "তারল্য ও মুনাফার নীতি", "পোর্টফোলিও ও বৈচিত্র্যায়নের নীতি", "ঝুঁকি ও মুনাফার নীতি"],
+    correct: 2
+  },
+  {
+    q: "২৮. নিট আয়ের যে অংশ শেয়ার মালিকদের মধ্যে বণ্টন করা হয় না তাকে কী বলে?",
+    opts: ["লভ্যাংশ তহবিল", "সংরক্ষিত তহবিল", "মোট মুনাফা", "নিট মুনাফা"],
+    correct: 1
+  },
+  {
+    q: "২৯. আমদানি ও রপ্তানি বাণিজ্যের ক্ষেত্রে প্রযোজ্য অর্থায়নকে কী বলে?",
+    opts: ["সরকারি অর্থায়ন", "ব্যক্তিগত অর্থায়ন", "অব্যবসায় অর্থায়ন", "আন্তর্জাতিক অর্থায়ন"],
+    correct: 3
+  },
+  {
+    q: "৩০. সাধারণ অর্থে অর্থায়ন হলো—",
+    opts: ["অর্থ সংগ্রহ", "অর্থের ব্যবহার", "অর্থের নিয়ন্ত্রণ", "অর্থের বিনিয়োগ"],
+    correct: 3
+  },
+  {
+    q: "৩১. সরকারি অর্থায়নে সর্বাগ্রে বিবেচ্য বিষয় কোনটি?",
+    opts: ["আয়", "ব্যয়", "সঞ্চয়", "বিনিয়োগ"],
+    correct: 1
+  },
+  {
+    q: "৩৩. নিচের কোনটি সরকারি অর্থায়নের উৎস বহির্ভূত?",
+    opts: ["আয়কর", "আমদানি শুল্ক", "রপ্তানি শুল্ক", "শেয়ার বিক্রয়"],
+    correct: 3
+  },
+  {
+    q: "৩৪. একাধিক লাভজনক প্রকল্পে বিনিয়োগ করা হলে তাকে কি বলে?",
+    opts: ["অর্থের সময়মূল্য নীতি", "তারল্য নীতি", "পোর্টফোলিও নীতি", "উপযুক্ততার নীতি"],
+    correct: 2
+  },
+  {
+    q: "৩৫. ঝুঁকি ও মুনাফার মধ্যে সম্পর্ক কী রূপ?",
+    opts: ["বিপরীত", "সরলরৈখিক", "সমানুভূতিক", "আনুপাতিক"],
+    correct: 1
+  },
+  {
+    q: "৩৬. তারল্যের পরিমাণ বৃদ্ধি পেলে মুনাফা কী হতে পারে?",
+    opts: ["হ্রাস", "বৃদ্ধি", "অপরিবর্তিত", "শতকরা হ্রাস"],
+    correct: 0
+  },
+  {
+    q: "৩৭. পোর্টফোলিও তত্ত্বের উদ্ভাবন ও প্রয়োগ শুরু হয় কখন?",
+    opts: ["১৯০০-১৯১০ দশকে", "১৯২০-১৯৩০ দশকে", "১৯৫০-১৯৬০ দশকে", "১৯৬০-১৯৭০ দশকে"],
+    correct: 2
+  },
+  {
+    q: "৪০. আর্থিক পরিকল্পনার পর অর্থায়নের প্রথম কাজ কোনটি?",
+    opts: ["উৎস সনাক্তকরণ", "তহবিল সংগ্রহ", "তহবিল সংরক্ষণ", "তহবিল বিনিয়োগ"],
+    correct: 1
+  },
+  {
+    q: "৪১. সরকারি অর্থায়নের মূল লক্ষ্য কী?",
+    opts: ["সামাজিক কল্যাণ", "মুনাফা অর্জন", "ব্যবসায়ের সাফল্য", "সম্পদের সঠিক ব্যবহার"],
+    correct: 0
+  },
+  {
+    q: "৪২. সম্পদ বৃদ্ধির জন্য মুনাফা সংরক্ষণ অর্থায়নের কোন কার্যের অন্তর্গত?",
+    opts: ["বিনিয়োগ", "লভ্যাংশ বণ্টন", "সম্পদ ব্যবস্থাপনা", "সংরক্ষণ"],
+    correct: 1
+  },
+  {
+    q: "৪৩. পরিবেশ দূষণমুক্ত রাখা অর্থায়নের কোন বিষয়টির অন্তর্ভুক্ত?",
+    opts: ["বিক্রয় সংক্রান্ত দায়বদ্ধতা", "সামাজিক দায়বদ্ধতা", "মুনাফা সংক্রান্ত দায়বদ্ধতা", "ঝুঁকি সংক্রান্ত দায়বদ্ধতা"],
+    correct: 1
+  },
+  {
+    q: "৪৪. অর্থায়নের প্রথম কাজ কোনটি?",
+    opts: ["তহবিল সংগ্রহ", "তহবিল বণ্টন", "মূলধন সংরক্ষণ", "স্বল্পমেয়াদি সম্পদ ব্যবস্থাপনা"],
+    correct: 0
+  },
+  {
+    q: "৪৫. ব্যবসায়ের জীবনী শক্তি কোনটি?",
+    opts: ["পরিচালক", "শ্রমিক", "পুঁজি", "ব্যবস্থাপনা"],
+    correct: 2
+  },
+  {
+    q: "৪৬. নিচের কোনটি অর্থায়নের নীতি?",
+    opts: ["চলতি সম্পদ ব্যবস্থাপনা", "মূলধন বাজেটিং সিদ্ধান্ত", "তহবিল সংগ্রহ ও বণ্টন", "পোর্টফোলিও এবং বৈচিত্র্যায়ন"],
+    correct: 3
+  },
+  {
+    q: "৪৭. তারল্য ও মুনাফার মধ্যে সম্পর্ক কীরূপ?",
+    opts: ["বিপরীত", "সরলরৈখিক", "সমানুভূতিক", "আনুপাতিক"],
+    correct: 0
+  },
+  {
+    q: "৪৮. বিনিময়ের সহজ মাধ্যম কোনটি?",
+    opts: ["চেক", "বিনিময় বিল", "অর্থ", "প্রত্যয়পত্র"],
+    correct: 2
+  },
+  {
+    q: "৪৯. একটি বিনিয়োগ প্রকল্পে ক্ষতি হলে অন্য প্রকল্পের মুনাফা দ্বারা ক্ষতি পুষিয়ে নেয়া যায়। এটি অর্থায়নের কোন নীতির আওতাভুক্ত?",
+    opts: ["তারল্য নীতি", "মুনাফার নীতি", "বৈচিত্র্যায়নের নীতি", "ঝুঁকির নীতি"],
+    correct: 2
+  },
+  {
+    q: "৫০. ব্যবসায় প্রতিষ্ঠানের দীর্ঘমেয়াদি উদ্দেশ্য হলো—",
+    opts: ["মুনাফা সর্বাধিকরণ", "সম্পদ সর্বাধিকরণ", "সামাজিক সুনাম অর্জন", "লেনদেন বৃদ্ধিকরণ"],
+    correct: 1
+  },
+  {
+    q: "৫৬. ব্যবসায় অর্থায়নের মূল লক্ষ্য কোনটি?",
+    opts: ["মুনাফা সর্বাধিকরণ", "ব্যয় নিয়ন্ত্রণ", "জনকল্যাণ", "সম্পদ সর্বাধিকরণ"],
+    correct: 3
+  },
+  {
+    q: "৫৭. একটি প্রকল্পে বিনিয়োগ না করে একাধিক প্রকল্পে বিনিয়োগ করাকে কী বলে?",
+    opts: ["ঝুঁকি ও মুনাফা সমন্বয়করণ নীতি", "তারল্য ও মুনাফা অর্জন ক্ষমতার নীতি", "উপযুক্ততার নীতি", "পোর্টফোলিও বা বৈচিত্র্যায়ন নীতি"],
+    correct: 3
+  },
+  {
+    q: "৫৮. একটি ফার্মের প্রধান লক্ষ্য হওয়া উচিত—",
+    opts: ["সম্পদ সর্বাধিকরণ", "মুনাফা সর্বাধিকরণ", "মূলধন বৃদ্ধি", "বিক্রয় বৃদ্ধি"],
+    correct: 0
+  },
+  {
+    q: "৫৯. অব্যবসায়ী প্রতিষ্ঠানের অর্থসংস্থানের উদ্দেশ্য কী?",
+    opts: ["মুনাফা অর্জন", "আয়-ব্যয় নিয়ন্ত্রণ", "সম্পদ ক্রয়", "জনсеবা প্রদান"],
+    correct: 3
+  },
+  {
+    q: "৬০. বাংলাদেশে প্রচলিত কোম্পানি আইন কত সালের?",
+    opts: ["১৯৩২", "১৯৯৪", "১৯৭১", "১৯৮৪"],
+    correct: 1
+  },
+  {
+    q: "৬৩. সরকারি অর্থায়নে প্রথম কোনটি নির্ধারণ করা হয়?",
+    opts: ["রাজস্ব আয়", "রাজস্ব ঘাটতি", "রাজস্ব উদ্বৃত্ত", "রাজস্ব ব্যয়"],
+    correct: 3
+  },
+  {
+    q: "৬৪. একটি ফার্মের চূড়ান্ত লক্ষ্য নিচের কোনটি?",
+    opts: ["শেয়ার প্রতি আয় বৃদ্ধি", "বিনিয়োগ বৃদ্ধি", "সাধারণ শেয়ারের মূল্য বৃদ্ধি", "মোট মুনাফা বৃদ্ধি"],
+    correct: 2
+  },
+  {
+    q: "৬৭. তারল্য ও মুনাফার মধ্যে সম্পর্ক কী?",
+    opts: ["ঋণাত্মক", "সমানুভূতিক", "ধনাত্মক", "निम्नমুখী"],
+    correct: 0
+  },
+  {
+    q: "৬৮. ব্যবসায় অর্থায়নের প্রধান লক্ষ্য কী?",
+    opts: ["ব্যবসায় অর্থ সরবরাহ", "ব্যবসায়ের ঝুঁকি কমানো", "ব্যবসায়ের সম্পদ সর্বাধিকরণ", "ব্যবসায়ের অর্থের সুষ্ঠু ব্যবস্থাপনা"],
+    correct: 2
+  },
+  {
+    q: "৭৬. \"Do not put all your eggs in one basket\" প্রবাদ বাক্যটি অর্থায়নের কোন নীতির সাথে সম্পৃক্ত?",
+    opts: ["ঝুঁকি ও মুনাফা", "তারল্য ও মুনাফা", "পোর্টফোলিও বৈচিত্র্যায়ন", "উপযুক্ততার"],
+    correct: 2
+  },
+  {
+    q: "৭৭. তহবিল সংগ্রহ ও বিনিয়োগ সংক্রান্ত প্রক্রিয়াকে কী বলে?",
+    opts: ["অর্থায়ন", "বাস্তবায়ন", "অর্থনীতি", "পরিকল্পনা"],
+    correct: 0
+  },
+  {
+    q: "৭৮. সরকারি অর্থায়নে সর্বাগ্রে বিবেচনার বিষয় কোনটি?",
+    opts: ["আয়", "ব্যয়", "সঞ্চয়", "বিনিয়োগ"],
+    correct: 1
+  },
+  {
+    q: "৭৯. নিচের কোনটি অর্থায়নের কার্যাবলির বহির্ভূত?",
+    opts: ["তহবিল সংগ্রহ", "মূলধন বাজেটিং", "আয় সংরক্ষণ", "বিপণন প্রসার"],
+    correct: 3
+  },
+  {
+    q: "৮১. নিচের কোনটি অভ্যন্তরীণ অর্থায়নের উৎস?",
+    opts: ["শিল্প ব্যাংক", "বাণিজ্যিক ব্যাংক", "বাণিজ্যিক পত্র", "তহবিল"],
+    correct: 3
+  },
+  {
+    q: "৮২. নিচের কোনটি অর্থায়নের কাজ নয়?",
+    opts: ["তহবিল সংগ্রহ", "দীর্ঘমেয়াদি বিনিয়োগ সিদ্ধান্ত", "বাজারজাতকরণ", "লভ্যাংশ বণ্টন"],
+    correct: 2
+  },
+  {
+    q: "৮৩. তারল্য ও দেউলিয়াদ্ধের মধ্যে সম্পর্ক কোনটি?",
+    opts: ["সমানুভূতিক", "আনুপাতিক", "ধনাত্মক", "ঋণাত্মক"],
+    correct: 3
+  },
+  {
+    q: "৮৪. সম্পদ সর্বাধিকরণের নির্দেশক কোনটি?",
+    opts: ["শেয়ার প্রতি আয়", "শেয়ার প্রতি লভ্যাংশ", "শেয়ারের বিগত বছরের মূল্য", "শেয়ারের বর্তমান বাজারমূল্য"],
+    correct: 3
+  },
+  {
+    q: "৮৬. কোন অর্থায়নের ক্ষেত্রে ব্যয় বুঝে আয় করতে হয়?",
+    opts: ["ব্যবসায়", "ব্যক্তিগত", "অব্যবসায়", "সরকারি"],
+    correct: 3
+  }
+
+],
 'fin1_ch2': [{ q: 'আর্থিক বাজার কয় প্রকার?', opts: ['২ প্রকার', '৩ প্রকার', '৪ প্রকার', '৫ প্রকার'], correct: 0 }],
 'fin1_ch3': [{ q: 'অর্থের সময়মূল্যের ধারণাটি কিসের সাথে সম্পর্কিত?', opts: ['মুদ্রাস্ফীতি', 'সুদের হার', 'বিনিময় হার', 'করের হার'], correct: 1 }],
 'fin1_ch4': [{ q: 'চলমান অনুপাত (Current Ratio) কোন ধরনের বিশ্লেষণ?', opts: ['লাভদায়কতা', 'তরলতা', 'কার্যকারিতা', 'উত্তোলন'], correct: 1 }],
@@ -491,7 +1293,9 @@ const QB={
 'fin1_ch7': [{ q: 'মূলধন ব্যয় (Cost of Capital) কিসের পরিমাপ?', opts: ['মুনাফার', 'ঝুঁকির', 'বিনিয়োগের', 'ঋণের'], correct: 0 }],
 'fin1_ch8': [{ q: 'মূলধন বাজেটিং কোন ধরনের সিদ্ধান্ত?', opts: ['স্বল্পমেয়াদী', 'দীর্ঘমেয়াদী', 'মধ্যমেয়াদী', 'দৈনন্দিন'], correct: 1 }],
 'fin1_ch9': [{ q: 'ঝুঁকি ও মুনাফা কী সম্পর্কযুক্ত?', opts: ['সমানুপাতিক', 'বিপরীতমুখী', 'সম্পর্কহীন', 'একই'], correct: 0 }],
-'fin2_ch1': [{ q: 'ব্যাংক শব্দটি কোন ভাষা থেকে এসেছে?', opts: ['ল্যাটিন', 'গ্রিক', 'ফ্রেঞ্চ', 'ইতালীয়'], correct: 0 }],
+'fin2_ch1': [{ q: 'ব্যাংক শব্দটি কোন ভাষা থেকে এসেছে?', opts: ['ল্যাটিন', 'গ্রিক', 'ফ্রেঞ্চ', 'ইতালীয়'], correct: 0 }
+
+],
 'fin2_ch2': [{ q: 'বাংলাদেশের কেন্দ্রীয় ব্যাংক কোনটি?', opts: ['সোনালী ব্যাংক', 'বাংলাদেশ ব্যাংক', 'জনতা ব্যাংক', 'রূপালী ব্যাংক'], correct: 1 }],
 'fin2_ch3': [{ q: 'বাণিজ্যিক ব্যাংকের প্রধান কাজ কী?', opts: ['নোট ইস্যু', 'আমানত গ্রহণ ও ঋণ প্রদান', 'বাজেট তৈরি', 'কর আদায়'], correct: 1 }],
 'fin2_ch4': [{ q: 'চলতি হিসাব কোন ধরনের হিসাব?', opts: ['আমানত', 'ঋণ', 'সঞ্চয়', 'বর্তমান'], correct: 3 }],
@@ -505,7 +1309,89 @@ const QB={
 'fin2_ch12': [{ q: 'নৌ-বিমা কোন আইনে পরিচালিত হয়?', opts: ['কোম্পানি আইন', 'বিমা আইন', 'সামুদ্রিক আইন', 'পাইকারি আইন'], correct: 2 }],
 'fin2_ch13': [{ q: 'অগ্নি বিমা কোন ধরনের ক্ষতি পূরণ করে?', opts: ['প্রাণহানি', 'আগুনে সম্পত্তি ক্ষয়ক্ষতি', 'চুরি', 'দুর্ঘটনা'], correct: 1 }],
 'fin2_ch14': [{ q: 'চুরি বিমা কোন ধরনের বিমার অন্তর্ভুক্ত?', opts: ['সামাজিক বিমা', 'ব্যক্তিগত বিমা', 'বিবিধ বিমা', 'সম্পত্তি বিমা'], correct: 2 }],
-'mgt1_ch1': [{ q: 'ব্যবসায়ের মুখ্য উদ্দেশ্য কী?', opts: ['মুনাফা অর্জন', 'সামাজিক কল্যাণ', 'সম্পদ সর্বাধিকরণ', 'মূলধন গঠন'], correct: 0 }],
+'mgt1_ch1': [{ q: 'ব্যবসায়ের মুখ্য উদ্দেশ্য কী?', opts: ['মুনাফা অর্জন', 'সামাজিক কল্যাণ', 'সম্পদ সর্বাধিকরণ', 'মূলধন গঠন'], correct: 0 },
+// Java/JavaScript Format of the MCQ Questions
+
+  // প্রথম ছবি (Image 1 - 1277dab7)
+  { q: "প্রমিতকরণ বলতে বোঝায়—", opts: ["পণ্য বিভাজন", "পণ্য নির্ধারণ", "পণ্য নির্দিষ্টকরণ", "মান নির্ধারণ"], correct: 3 },
+  { q: "ব্যবসায় কোন ধরনের সংগঠন?", opts: ["প্রাকৃতিক", "রাজনৈতিক", "সামাজিক", "ধর্মীয়"], correct: 2 },
+  { q: "নিচের কোনটি কাঁচামাল প্রক্রিয়াজাত করে পণ্য তৈরি করার সাথে সম্পৃক্ত?", opts: ["ক্রয়-বিক্রয়", "বাজারজাতকরণ", "উৎপাদন", "সবকটিই"], correct: 2 },
+  { q: "‘বাজার সম্প্রসারণ’ সংক্রান্ত বাধা কিসের মাধ্যমে অপসারিত হয়?", opts: ["বিমা", "প্রচার", "গুদামজাতকরণ", "পরিবহন"], correct: 1 },
+  { q: "বিজ্ঞাপন ব্যয় চূড়ান্ত পর্যায়ে বহন করে—", opts: ["উদ্যোক্তা", "উৎপাদক", "ভোক্তা", "পাইকার"], correct: 2 },
+  { q: "ব্যবসায়ের মুখ্য কাজ কোনটি?", opts: ["মুনাফা অর্জন", "ক্রয়", "গ্রাহক সেবা", "উৎপাদন"], correct: 3 },
+  { q: "কোনটি বিনিময় সহায়ক কাজ?", opts: ["গুদামজাতকরণ", "উৎপাদন", "খুচরা কারবার", "রপ্তানি"], correct: 0 },
+  { q: "ব্যাংক কর্তৃক ঋণ মঞ্জুর। এটি কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["স্বত্বগত উপযোগ", "সেবাগত উপযোগ", "সময়গত উপযোগ", "স্থানগত উপযোগ"], correct: 1 },
+  { q: "কোনটি বাণিজ্য নয়?", opts: ["বিনিময়", "উৎপাদন", "বাজারজাতকরণ", "পরিবহন"], correct: 1 },
+  { q: "কখন ইংল্যান্ডে শিল্পবিপ্লবের সূচনা হয়?", opts: ["দ্বাদশ শতাব্দীতে", "ষোড়শ শতাব্দীতে", "অষ্টাদশ শতাব্দীতে", "ঊনবিংশ শতাব্দীতে"], correct: 2 },
+  { q: "ভারত থেকে শাড়ি কিনে মালদ্বীপে বিক্রি করলে তাকে কী ব্যবসায় বলা হয়?", opts: ["আমদানি", "পাইকারি", "রপ্তানি", "পুনঃরপ্তানি"], correct: 3 },
+  { q: "কোনটি ব্যবসায়ের বৈশিষ্ট্য নয়?", opts: ["মুনাফা", "গতিশীল দৃষ্টিভঙ্গি", "ঝুঁকি", "উপযোগ সৃষ্টি"], correct: 1 },
+  { q: "কে প্রতিনিধিত্ব মধ্যস্থব্যবসায়ী?", opts: ["পাইকারি ব্যবসায়ী", "খুচরা ব্যবসায়ী", "পণ্য প্রাপক", "ব্যাংক"], correct: 0 },
+
+  // দ্বিতীয় ছবি (Image 2 - 1327fadc)
+  { q: "পানি বা বায়ু থেকে সম্পদ উত্তোলন যে শিল্পের অন্তর্গত তা হলো—", opts: ["সেবা শিল্প", "উৎপাদনমুখী শিল্প", "নিষ্কাশন শিল্প", "প্রজনন শিল্প"], correct: 2 },
+  { q: "নিচের কোনটি শ্রমঘন শিল্প?", opts: ["ওষুধ", "সার", "প্রসাধন", "তৈরি পোশাক"], correct: 3 },
+  { q: "ব্যবসায়ের ক্ষেত্রে প্রমিতকরণ কী ধরনের উপযোগ সৃষ্টি করে?", opts: ["সময়গত", "প্রচারগত", "মানগত", "বিক্রয়গত"], correct: 2 },
+  { q: "কোন বিষয়টিকে ব্যবসায়ের প্রাণ বলা হয়?", opts: ["লোকবল", "ভূমি", "সংগঠন", "অর্থ"], correct: 3 },
+  { q: "কোনটি ব্যবসায়ের মৌলিক বৈশিষ্ট্য নয়?", opts: ["মুনাফা অর্জন", "সংগঠন", "ঝুঁকি ও অনিশ্চয়তা", "শ্রমিক ছাঁটাই"], correct: 3 },
+  { q: "উৎপাদনের বাহন কী?", opts: ["শিল্প", "রপ্তানি", "বাণিজ্য", "আমদানি"], correct: 0 },
+  { q: "কেরোসিন কোন ধরনের শিল্পজাত পণ্য?", opts: ["সংযোজন", "সংশ্লেষণ", "বিশ্লেষণ", "সংযুক্ত"], correct: 2 },
+  { q: "আধুনিক ব্যবসায়ের ক্রমবিকাশের ইতিহাসের স্তর বিভাগ—", opts: ["এক", "দুই", "তিন", "পাঁচ"], correct: 2 },
+  { q: "শিল্পের প্রধান কাজ কী?", opts: ["বাণিজ্যের ব্যক্তিগত বাধা দূর করা", "রূপগত উপযোগ সৃষ্টি করা", "স্থানগত উপযোগ সৃষ্টি করা", "কর্মসংস্থানের সুযোগ সৃষ্টি করা"], correct: 1 },
+  { q: "কোনটি ব্যবসায়ের সামাজিক উদ্দেশ্য?", opts: ["মুনাফা অর্জন", "মূলধন বিনিয়োগ", "ন্যায্যমূল্যে পণ্য সরবরাহ", "শ্রম বিনিয়োগ"], correct: 2 },
+  { q: "সম্পদ আহরণ ও প্রক্রিয়াজাতকরণ ব্যবসায়ের কোন কার্যাবলির অন্তর্গত?", opts: ["উৎপাদন", "পরিবহন", "গুদামজাতকরণ", "পর্যাযিতকরণ"], correct: 0 },
+
+  // পঞ্চম ছবি (Image 5 - 7bc1f0b8)
+  { q: "ব্যবসায় হলো মুনাফা অর্জনের উদ্দেশ্যে—", opts: ["উৎপাদন, বণ্টন ও এর সহায়ক কাজের সমষ্টি", "পণ্য বিনিময় ও সহায়ক কাজের সমষ্টি", "পণ্য বিনিময় ও বণ্টন কাজের সমষ্টি", "ঝুঁকি ও অনিশ্চয়তার সমষ্টি"], correct: 0 },
+  { q: "'Business' শব্দটি কোন ভাষার?", opts: ["ইংরেজি", "ইতালীয়", "ফ্রেঞ্চ", "ফারসি"], correct: 0 },
+  { q: "ব্যবসায় আবির্ভাব হয় কেন?", opts: ["সম্পদশালী হওয়ার জন্য", "মুনাফা অর্জনের জন্য", "চাহিদা পূরণের জন্য", "বেকারত্ব দূর করার জন্য"], correct: 2 },
+  { q: "নিচের কোনটি ব্যবসায়ের সঠিক সমীকরণ?", opts: ["B = ΣT + ΣI + ΣAT", "B = ΣI + ΣT + ΣAT", "B = ΣAT + ΣI + ΣT", "B = ΣI + ΣAT + ΣT"], correct: 1 },
+  { q: "পণ্যসামগ্রী উৎপাদন থেকে শুরু করে ভোক্তার কাছে পৌঁছে দেওয়া পর্যন্ত যাবতীয় কাজকে কী বলে?", opts: ["শিল্প", "বাণিজ্য", "প্রত্যক্ষ সেবা", "ব্যবসায়"], correct: 3 },
+  { q: "সর্বজনগ্রাহ্য হিসেবে অর্থের আবির্ভাব ঘটে কোন যুগে?", opts: ["আদিম", "মধ্য", "আধুনিক", "প্রাগৈতিহাসিক"], correct: 1 },
+  { q: "ব্যবসায়ের মূল উদ্দেশ্য কোনটি?", opts: ["সেবা দান", "মুনাফা অর্জন", "সম্পদ অর্জন", "প্রতিষ্ঠিত হওয়া"], correct: 1 },
+  { q: "শিল্প কী সৃষ্টি করে?", opts: ["উপযোগ", "শ্রমিক সংঘ", "মালিকানা", "দায়িত্ববোধ"], correct: 0 },
+  { q: "শিল্প কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["স্বত্বগত", "রূপগত", "স্থানগত", "সময়গত"], correct: 1 },
+  { q: "একটি পোশাক প্রস্তুতকারী প্রতিষ্ঠান পোশাক তৈরি করে প্রচুর মুনাফা অর্জন করেছে। উক্ত প্রতিষ্ঠান কোন ধরনের উপযোগ সৃষ্টি করেছে?", opts: ["স্থানগত", "সময়গত", "অর্থগত", "রূপগত"], correct: 3 },
+  { q: "বাসায় বাসায় পত্রিকা সরবরাহ কোন শিল্পের মধ্যে পড়ে?", opts: ["নির্মাণ", "উৎপাদন", "সংযোজন", "সেবা পরিবেশন"], correct: 3 },
+  { q: "প্রাকৃতিক গ্যাস আহরণ কোন শিল্পের অন্তর্গত?", opts: ["প্রজনন", "নিষ্কাশন", "কৃষি", "উৎপাদন"], correct: 1 },
+  { q: "নদী থেকে কাঁকড়া উত্তোলন কোন ধরনের শিল্প?", opts: ["প্রজনন", "নিষ্কাশন", "যৌগিক", "প্রক্রিয়াকরণ"], correct: 1 },
+  { q: "খনি থেকে কয়লা উত্তোলন কোন ধরনের শিল্প?", opts: ["প্রজনন", "নিষ্কাশন", "প্রক্রিয়াভিত্তিক", "যৌগিক"], correct: 1 },
+  { q: "ন্যাপথলিন তৈরি কোন শিল্পের মধ্যে পড়ে?", opts: ["প্রক্রিয়াভিত্তিক", "বিশ্লেষণ", "সংযোজন", "যৌগিক"], correct: 1 },
+  { q: "সাবান তৈরি কোন শিল্পের অন্তর্গত?", opts: ["সংযোজন", "নিষ্কাশন", "যৌগিক", "বিশ্লেষণ"], correct: 2 },
+  { q: "ফ্লাইওভার কোন ধরনের শিল্প?", opts: ["সেবা", "নির্মাণ", "যৌগিক", "সংযোজন"], correct: 1 },
+  { q: "পানি সরবরাহ কোন শিল্পের অন্তর্গত?", opts: ["প্রজনন", "উৎপাদন", "নির্মাণ", "সেবা"], correct: 3 },
+  { q: "নিচের কোনটি সংযোজন শিল্পের অন্তর্গত?", opts: ["জাহাজ", "সিমেন্ট", "সাবান", "পেট্রোল"], correct: 0 },
+  { q: "কর্ণফুলী টানেল কোন ধরনের শিল্প?", opts: ["যৌগিক", "সংযোজন", "নির্মাণ", "সেবা"], correct: 3 },
+  { q: "মানুষের জীবনযাত্রাকে সহজ ও আরামদায়ক করার জন্য যে শিল্প নিয়োজিত থাকে সেটি কোন শিল্পের অন্তর্গত?", opts: ["সেবা পরিবেশক শিল্প", "প্রজনন শিল্প", "উৎপাদন শিল্প", "যান্ত্রিক শিল্প"], correct: 0 },
+
+  // ষষ্ঠ ছবি (Image 6 - 847dd8b3)
+  { q: "ব্যবসায়ের মুখ্য উদ্দেশ্য কী?", opts: ["মুনাফা অর্জন", "সামাজিক কল্যাণ", "সম্পদ সর্বাধিকরণ", "মূলধন গঠন"], correct: 0 },
+  { q: "কখন ইংল্যান্ডে শিল্পবিপ্লবের সূচনা হয়?", opts: ["দ্বাদশ শতাব্দীতে", "ষোড়শ শতাব্দীতে", "অষ্টাদশ শতাব্দীর শেষে", "অষ্টাদশ শতাব্দীর প্রথমে"], correct: 2 },
+  { q: "ব্যবসায় ক্রমবিকাশের কোন যুগে শিল্পবিপ্লব হয়েছিল?", opts: ["প্রাথমিক", "মধ্য", "আধুনিক", "আদিম"], correct: 2 },
+  { q: "আধুনিক যুগে কোন উপাদানটি ব্যবসায়ের ক্ষেত্রে নতুন মাত্রা সংযোজন করেছে?", opts: ["মুদ্রা প্রচলন", "ভোক্তাকেন্দ্রিক বাজার", "শিল্পবিপ্লব", "ব্যবসায়ী সংঘ"], correct: 1 },
+  { q: "কোন কাজে মুনাফা অর্জন বিলম্বে হয়?", opts: ["শিল্পে", "বাণিজ্যে", "বিক্রয়ে", "প্রত্যক্ষ সেবায়"], correct: 0 },
+  { q: "কোনটি প্রাথমিক শিল্পের অন্তর্ভুক্ত?", opts: ["প্রজনন", "বিশ্লেষণ", "নির্মাণ", "সেবা পরিবেশক"], correct: 0 },
+  { q: "কোনটি প্রাথমিক শিল্পের অন্তর্ভুক্ত নয়?", opts: ["প্রজনন", "কৃষি", "সংযোজন", "নিষ্কাশন"], correct: 2 },
+  { q: "মাছ ধরা কোন ধরনের শিল্প?", opts: ["নিষ্কাশন", "যৌগিক", "প্রজনন", "সংযুক্ত"], correct: 0 },
+  { q: "মোবাইল ফোন কোন জাতীয় শিল্প?", opts: ["সংযোজন", "নির্মাণ", "প্রক্রিয়াকরণ", "যৌগিক"], correct: 0 },
+  { q: "যৌগিক শিল্পের উদাহরণ কোনটি?", opts: ["ন্যাপথলিন", "মোবাইল", "চিনি", "সার"], correct: 3 },
+  { q: "আখ থেকে চিনি উৎপাদন কোন শিল্পের অন্তর্গত?", opts: ["সংযোজন", "যৌগিক", "বিশ্লেষণ", "প্রক্রিয়াভিত্তিক"], correct: 3 },
+  { q: "সাধারণত পণ্য ক্রয়-বিক্রয়কে কী বলে?", opts: ["ব্যবসায়", "বিনিময়", "বাণিজ্য", "শিল্প"], correct: 1 },
+  { q: "কোনটি বাণিজ্য?", opts: ["মাছ চাষ", "রাস্তা নির্মাণ", "পণ্য পরিবহন", "কয়লা উত্তোলন"], correct: 2 },
+  { q: "বিজ্ঞাপন ব্যবসায়ের কোন ধরনের প্রতিবন্ধকতা দূর করে?", opts: ["স্থানগত", "জ্ঞানগত", "স্বত্বগত", "কালগত"], correct: 1 },
+  { q: "নিচের কোনটি বিজ্ঞাপনের মাধ্যম বহির্ভূত?", opts: ["সাইনবোর্ড", "টেলিভিশন", "সংবাদপত্র", "আকর্ষণীয় মোড়ক"], correct: 3 },
+  { q: "বাজারজাতকরণ প্রসার কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["কালগত", "স্থানগত", "স্বত্বগত", "জ্ঞানগত"], correct: 3 },
+  { q: "কোনটি প্রত্যক্ষ সেবার অন্তর্গত?", opts: ["প্রকৌশল", "ওষুধ উৎপাদন", "মধু সংগ্রহ", "মাছ চাষ"], correct: 0 },
+  { q: "ব্যবসায়ের মৌলিক ও গুরুত্বপূর্ণ কাজ কোনটি?", opts: ["মুনাফা অর্জন", "ক্রয়", "বিক্রয়", "পরিবহন"], correct: 1 },
+  { q: "পণ্যদ্রব্যকে তার প্রকৃতি, রং ও গুণাগুণের ওপর ভিত্তি করে বিভক্ত করাকে কী বলে?", opts: ["পর্যাযিতকরণ", "প্রমিতকরণ", "একত্রকরণ", "বণ্টনকরণ"], correct: 0 },
+  { q: "নিচের কোনটির সাথে পর্যাযিতকরণ সম্পর্কিত?", opts: ["ব্যবস্থাপনা", "বাজারজাতকরণ", "অর্থনীতি", "অর্থায়ন"], correct: 1 },
+  { q: "কোনটি ব্যবসায়ের কাজের সাথে বেশি সম্পৃক্ত?", opts: ["মোড়কীকরণ", "নগরায়ন", "দক্ষতা বৃদ্ধি", "সঞ্চয় সৃষ্টি"], correct: 0 },
+  { q: "কোনো নতুন পণ্য বাজারে নিয়ে আসার আগে কী করতে হয়?", opts: ["মূল্য হ্রাস", "বাজার গবেষণা", "আকর্ষণীয় মোড়ক", "উদ্ভাবন ও উন্নয়ন"], correct: 1 },
+  { q: "খাদ্যমান সুরক্ষায় মোড়কীকরণ কোন ধরনের উপযোগ সৃষ্টিতে ভূমিকা রাখে?", opts: ["স্থানগত", "কালগত", "জ্ঞানগত", "অর্থসংস্থানগত"], correct: 1 },
+  { q: "কত সালে সামাজিক ব্যবসায়ের ধারণাটি প্রবর্তিত হয়?", opts: ["১৯৮৭ সালে", "১৯৯৭ সালে", "২০০৭ সালে", "২০১৭ সালে"], correct: 2 },
+  { q: "কোনটি সামাজিক ব্যবসায়ের সাথে সম্পর্কিত?", opts: ["একচেটিয়া ব্যবসায়ের প্রসার", "উচ্চমূল্যে পণ্য বিক্রয়", "বিনিয়োগকারীর মূলধন ফেরত দেওয়া", "ব্যক্তিগত আর্থিক স্বার্থ রক্ষা"], correct: 2 },
+  { q: "ব্যবসায়ের সামাজিক গুরুত্ব নিচের কোনটি?", opts: ["সম্পদের সুষ্ঠু ব্যবহার", "সঞ্চয়ে উৎসাহ দান", "জীবনযাত্রার মানোন্নয়ন", "শ্রম বিভাগের সুফল"], correct: 2 }
+
+],
 'mgt1_ch2': [{ q: 'ভূ-প্রকৃতি ও জলবায়ু ব্যবসায়ের কোন পরিবেশের অন্তর্গত?', opts: ['সামাজিক', 'রাজনৈতিক', 'প্রাকৃতিক', 'অর্থনৈতিক'], correct: 2 }],
 'mgt1_ch3': [{ q: 'সকল সংগঠনের রাজা বলা হয় কাকে?', opts: ['যৌথ মূলধনী ব্যবসায়কে', 'রাষ্ট্রীয় ব্যবসায়কে', 'একমালিকানা ব্যবসায়কে', 'জোট ব্যবসায়কে'], correct: 2 }],
 'mgt1_ch4': [{ q: 'অংশীদারি ব্যবসায়ে সর্বোচ্চ সদস্য সংখ্যা কত?', opts: ['১০', '২০', '৫০', 'আইন কর্তৃক নির্ধারিত নেই'], correct: 1 }],
@@ -517,7 +1403,218 @@ const QB={
 'mgt1_ch10': [{ q: 'উদ্যোক্তা কাকে বলে?', opts: ['যে শ্রমিক নিয়োগ দেয়', 'যে ব্যবসা পরিচালনার ঝুঁকি নেয়', 'যে মূলধন যোগায়', 'যে ব্যবস্থাপক'], correct: 1 }],
 'mgt1_ch11': [{ q: 'ই-কমার্স কোন যুগের সংযোজন?', opts: ['প্রাচীন', 'মধ্য', 'আধুনিক', 'প্রাগৈতিহাসিক'], correct: 2 }],
 'mgt1_ch12': [{ q: 'ব্যবসায় নৈতিকতার উদ্ভব কোথা থেকে?', opts: ['আইন থেকে', 'সমাজ থেকে', 'সরকার থেকে', 'ধর্ম থেকে'], correct: 1 }],
-'mgt2_ch1': [{ q: 'ব্যবস্থাপনার জনক কাকে বলা হয়?', opts: ['এফ.ডব্লিউ. টেইলর', 'হেনরি ফয়ল', 'এলটন মেয়ো', 'পিটার ড্রাকার'], correct: 1 }],
+'mgt2_ch1': [{ q: 'ব্যবস্থাপনার জনক কাকে বলা হয়?', opts: ['এফ.ডব্লিউ. টেইলর', 'হেনরি ফয়ল', 'এলটন মেয়ো', 'পিটার ড্রাকার'], correct: 1 },
+
+  // --- প্রথম পত্র: ব্যবসায়ের মৌলিক ধারণা ও সংগঠন ---
+  
+  // ইমেজ ১ (1277dab7) - ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষার প্রশ্ন
+  { q: "প্রমিতকরণ বলতে বোঝায়—", opts: ["পণ্য বিভাজন", "পণ্য নির্ধারণ", "পণ্য নির্দিষ্টকরণ", "মান নির্ধারণ"], correct: 3 },
+  { q: "ব্যবসায় কোন ধরনের সংগঠন?", opts: ["প্রাকৃতিক", "political", "সামাজিক", "ধর্মীয়"], correct: 2 },
+  { q: "নিচের কোনটি কাঁচামাল প্রক্রিয়াজাত করে পণ্য তৈরি করার সাথে সম্পৃক্ত?", opts: ["ক্রয়-বিক্রয়", "বাজারজাতকরণ", "উৎপাদন", "সবকটিই"], correct: 2 },
+  { q: "‘বাজার সম্প্রসারণ’ সংক্রান্ত বাধা কিসের মাধ্যমে অপসারিত হয়?", opts: ["বিমা", "প্রচার", "গুদামজাতকরণ", "পরিবহন"], correct: 1 },
+  { q: "বিজ্ঞাপন ব্যয় চূড়ান্ত পর্যায়ে বহন করে—", opts: ["উদ্যোক্তা", "উৎপাদক", "ভোক্তা", "পাইকার"], correct: 2 },
+  { q: "ব্যবসায়ের মুখ্য কাজ কোনটি?", opts: ["মুনাফা অর্জন", "ক্রয়", "গ্রাহক সেবা", "উৎপাদন"], correct: 3 },
+  { q: "কোনটি বিনিময় সহায়ক কাজ?", opts: ["গুদামজাতকরণ", "উৎপাদন", "খুচরা কারবার", "রপ্তানি"], correct: 0 },
+  { q: "ব্যাংক কর্তৃক ঋণ মঞ্জুর। এটি কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["স্বত্বগত উপযোগ", "সেবাগত উপযোগ", "সময়গত উপযোগ", "স্থানগত উপযোগ"], correct: 1 },
+  { q: "কোনটি বাণিজ্য নয়?", opts: ["বিনিময়", "উৎপাদন", "বাজারজাতকরণ", "পরিবহন"], correct: 1 },
+  { q: "কখন ইংল্যান্ডে শিল্পবিপ্লবের সূচনা হয়?", opts: ["দ্বাদশ শতাব্দীতে", "ষোড়শ শতাব্দীতে", "অষ্টাদশ শতাব্দীতে", "ঊনবিংশ শতাব্দীতে"], correct: 2 },
+  { q: "ভারত থেকে শাড়ি কিনে মালদ্বীপে বিক্রি করলে তাকে কী ব্যবসায় বলা হয়?", opts: ["আমদানি", "পাইকারি", "রপ্তানি", "পুনঃরপ্তানি"], correct: 3 },
+  { q: "কোনটি ব্যবসায়ের বৈশিষ্ট্য নয়?", opts: ["মুনাফা", "গতিশীল দৃষ্টিভঙ্গি", "ঝুঁকি", "উপযোগ সৃষ্টি"], correct: 1 },
+  { q: "কে প্রতিনিধিত্ব মধ্যস্থব্যবসায়ী?", opts: ["পাইকারি ব্যবসায়ী", "খুচরা ব্যবসায়ী", "পণ্য প্রাপক", "ব্যাংক"], correct: 0 },
+
+  // ইমেজ ২ (1327fadc) - রাজশাহী ও চট্টগ্রাম বিশ্ববিদ্যালয় প্রশ্ন
+  { q: "পানি বা বায়ু থেকে সম্পদ উত্তোলন যে শিল্পের অন্তর্গত তা হলো—", opts: ["সেবা শিল্প", "উৎপাদনমুখী শিল্প", "নিষ্কাশন শিল্প", "প্রজনন শিল্প"], correct: 2 },
+  { q: "নিচের কোনটি শ্রমঘন শিল্প?", opts: ["ওষুধ", "সার", "প্রসাধন", "তৈরি পোশাক"], correct: 3 },
+  { q: "ব্যবসায়ের ক্ষেত্রে প্রমিতকরণ কী ধরনের উপযোগ সৃষ্টি করে?", opts: ["সময়গত", "প্রচারগত", "মানগত", "বিক্রয়গত"], correct: 2 },
+  { q: "কোন বিষয়টিকে ব্যবসায়ের প্রাণ বলা হয়?", opts: ["লোকবল", "ভূমি", "সংগঠন", "অর্থ"], correct: 3 },
+  { q: "কোনটি ব্যবসায়ের মৌলিক বৈশিষ্ট্য নয়?", opts: ["মুনাফা অর্জন", "সংগঠন", "ঝুঁকি ও অনিশ্চয়তা", "শ্রমিক ছাঁটাই"], correct: 3 },
+  { q: "উৎপাদনের বাহন কী?", opts: ["শিল্প", "রপ্তানি", "বাণিজ্য", "আমদানি"], correct: 0 },
+  { q: "কেরোসিন কোন ধরনের শিল্পজাত পণ্য?", opts: ["সংযোজন", "সংশ্লেষণ", "বিশ্লেষণ", "সংযুক্ত"], correct: 2 },
+  { q: "আধুনিক ব্যবসায়ের ক্রমবিকাশের ইতিহাসের স্তর বিভাগ—", opts: ["এক", "দুই", "তিন", "পাঁচ"], correct: 2 },
+  { q: "শিল্পের প্রধান কাজ কী?", opts: ["বাণিজ্যের ব্যক্তিগত বাধা দূর করা", "রূপগত উপযোগ সৃষ্টি করা", "স্থানগত উপযোগ সৃষ্টি করা", "কর্মসংস্থানের সুযোগ সৃষ্টি করা"], correct: 1 },
+  { q: "কোনটি ব্যবসায়ের সামাজিক উদ্দেশ্য?", opts: ["মুনাফা অর্জন", "মূলধন বিনিয়োগ", "ন্যায্যমূল্যে পণ্য সরবরাহ", "শ্রম বিনিয়োগ"], correct: 2 },
+  { q: "সম্পদ আহরণ ও প্রক্রিয়াজাতকরণ ব্যবসায়ের কোন কার্যাবলির অন্তর্গত?", opts: ["উৎপাদন", "পরিবহন", "গুদামজাতকরণ", "পর্যাযিতকরণ"], correct: 0 },
+
+  // ইমেজ ৫ (7bc1f0b8) - বোর্ড পরীক্ষার বহুনির্বাচনি প্রশ্ন
+  { q: "ব্যবসায় হলো মুনাফা অর্জনের উদ্দেশ্যে—", opts: ["উৎপাদন, বণ্টন ও এর সহায়ক কাজের সমষ্টি", "পণ্য বিনিময় ও সহায়ক কাজের সমষ্টি", "পণ্য বিনিময় ও বণ্টন কাজের সমষ্টি", "ঝুঁকি ও অনিশ্চয়তার সমষ্টি"], correct: 0 },
+  { q: "'Business' শব্দটি কোন ভাষার?", opts: ["ইংরেজি", "ইতালীয়", "ফ্রেঞ্চ", "ফারসি"], correct: 0 },
+  { q: "ব্যবসায় আবির্ভাব হয় কেন?", opts: ["সম্পদশালী হওয়ার জন্য", "মুনাফা অর্জনের জন্য", "চাহিদা পূরণের জন্য", "বেকারত্ব দূর করার জন্য"], correct: 2 },
+  { q: "নিচের কোনটি ব্যবসায়ের সঠিক সমীকরণ?", opts: ["B = ΣT + ΣI + ΣAT", "B = ΣI + ΣT + ΣAT", "B = ΣAT + ΣI + ΣT", "B = ΣI + ΣAT + ΣT"], correct: 1 },
+  { q: "পণ্যসামগ্রী উৎপাদন থেকে শুরু করে ভোক্তার কাছে পৌঁছে দেওয়া পর্যন্ত যাবতীয় কাজকে কী বলে?", opts: ["শিল্প", "বাণিজ্য", "প্রত্যক্ষ সেবা", "ব্যবসায়"], correct: 3 },
+  { q: "সর্বজনগ্রাহ্য হিসেবে অর্থের আবির্ভাব ঘটে কোন যুগে?", opts: ["আদিম", "মধ্য", "আধুনিক", "প্রাগৈতিহাসিক"], correct: 1 },
+  { q: "ব্যবসায়ের মূল উদ্দেশ্য কোনটি?", opts: ["সেবা দান", "মুনাফা অর্জন", "সম্পদ অর্জন", "প্রতিষ্ঠিত হওয়া"], correct: 1 },
+  { q: "শিল্প কী সৃষ্টি করে?", opts: ["উপযোগ", "শ্রমিক সংঘ", "মালিকানা", "দায়িত্ববোধ"], correct: 0 },
+  { q: "শিল্প কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["স্বত্বগত", "রূপগত", "স্থানগত", "সময়গত"], correct: 1 },
+  { q: "একটি পোশাক প্রস্তুতকারী প্রতিষ্ঠান পোশাক তৈরি করে প্রচুর মুনাফা অর্জন করেছে। উক্ত প্রতিষ্ঠান কোন ধরনের উপযোগ সৃষ্টি করেছে?", opts: ["স্থানগত", "সময়গত", "অর্থগত", "রূপগত"], correct: 3 },
+  { q: "বাসায় বাসায় পত্রিকা সরবরাহ কোন শিল্পের মধ্যে পড়ে?", opts: ["নির্মাণ", "উৎপাদন", "সংযোজন", "সেবা পরিবেশন"], correct: 3 },
+  { q: "প্রাকৃতিক গ্যাস আহরণ কোন শিল্পের অন্তর্গত?", opts: ["প্রজনন", "নিষ্কাশন", "কৃষি", "উৎপাদন"], correct: 1 },
+  { q: "নদী থেকে কাঁকড়া উত্তোলন কোন ধরনের শিল্প?", opts: ["প্রজনন", "নিষ্কাশন", "যৌগিক", "প্রক্রিয়াকরণ"], correct: 1 },
+  { q: "খনি থেকে কয়লা উত্তোলন কোন ধরনের শিল্প?", opts: ["প্রজনন", "নিষ্কাশন", "প্রক্রিয়াভিত্তিক", "যৌগিক"], correct: 1 },
+  { q: "ন্যাপথলিন তৈরি কোন শিল্পের মধ্যে পড়ে?", opts: ["প্রক্রিয়াভিত্তিক", "বিশ্লেষণ", "সংযোজন", "যৌগিক"], correct: 1 },
+  { q: "সাবান তৈরি কোন শিল্পের অন্তর্গত?", opts: ["সংযোজন", "নিষ্কাশন", "যৌগিক", "বিশ্লেষণ"], correct: 2 },
+  { q: "ফ্লাইওভার কোন ধরনের শিল্প?", opts: ["সেবা", "নির্মাণ", "যৌগিক", "সংযোজন"], correct: 1 },
+  { q: "পানি সরবরাহ কোন শিল্পের অন্তর্গত?", opts: ["প্রজনন", "উৎপাদন", "নির্মাণ", "সেবা"], correct: 3 },
+  { q: "নিচের কোনটি সংযোজন শিল্পের অন্তর্গত?", opts: ["জাহাজ", "সিমেন্ট", "সাবান", "পেট্রোল"], correct: 0 },
+  { q: "কর্ণফুলী টানেল কোন ধরনের শিল্প?", opts: ["যৌগিক", "সংযোজন", "নির্মাণ", "সেবা"], correct: 3 },
+  { q: "মানুষের জীবনযাত্রাকে সহজ ও আরামদায়ক করার জন্য যে শিল্প নিয়োজিত থাকে সেটি কোন শিল্পের অন্তর্গত?", opts: ["সেবা পরিবেশক শিল্প", "প্রজনন শিল্প", "উৎপাদন শিল্প", "যান্ত্রিক শিল্প"], correct: 0 },
+
+  // ইমেজ ৪ (05872fc0) - ব্যবসায়ের মৌলিক ধারণা অতিরিক্ত অংশ
+  { q: "শিল্পের উৎপাদিত পণ্য ভোক্তার হাতে পৌঁছানোর কাজকে কী বলে?", opts: ["শিল্প", "বাণিজ্য", "পরিবহন", "বাজারজাতকরণ"], correct: 1 },
+  { q: "ট্রেড কোন ধরনের বাধা দূর করে?", opts: ["অর্থগত", "ব্যক্তিগত", "স্থানগত", "তথ্যগত"], correct: 1 },
+  { q: "ক্রয়-বিক্রয় কোন ধরনের বাধা দূর করে?", opts: ["স্বত্বগত", "প্রচারগত", "অর্থগত", "রূপগত"], correct: 0 },
+  { q: "বৈদেশিক বাণিজ্য কয় ধরনের?", opts: ["২", "৩", "৪", "৫"], correct: 1 },
+  { q: "কোনটি ট্রেড সহায়ক কাজ?", opts: ["গুদামজাতকরণ", "উৎপাদন", "খুচরা ব্যবসায়", "পুনঃরপ্তানি"], correct: 0 },
+  { q: "পণ্য বণ্টনে ব্যাংক কোন ধরনের বাধা দূর করে?", opts: ["কালগত", "অর্থগত", "স্বত্বগত", "ঝুঁকিগত"], correct: 1 },
+  { q: "বিমা সাধারণত ব্যবসায়ের কোন ধরনের বাধা দূর করে?", opts: ["স্থান", "সময়", "ঝুঁকি", "অর্থ"], correct: 2 },
+  { q: "ব্যবসায়ের প্রধান মৌলিক কাজ কী?", opts: ["ক্রয়-বিক্রয়", "উৎপাদন", "অর্থসংস্থান", "ঝুঁকি গ্রহণ"], correct: 0 },
+  { q: "ব্যবসায়ের প্রধান দুটি কাজ কী?", opts: ["উৎপাদন ও বণ্টন", "মূলধন গঠন ও বিনিয়োগ", "ক্রয়-বিক্রয়", "অর্থসংস্থান ও বিপণন"], correct: 0 },
+  { q: "ব্যবসায়ের সহায়ক কাজ কোনটি?", opts: ["উৎপাদন", "ক্রয়-বিক্রয়", "আমদানি-রপ্তানি", "বিজ্ঞাপন"], correct: 3 },
+  { q: "ব্যবসায়ের প্রাথমিক কাজ কোনটি?", opts: ["উৎপাদন", "বণ্টন", "সেবা দেওয়া", "পণ্য সরবরাহ"], correct: 0 },
+  { q: "পণ্যদ্রব্য উৎপাদিত হয় কীভাবে?", opts: ["স্থানগত উপযোগ সৃষ্টির মাধ্যমে", "সময়গত উপযোগ সৃষ্টির মাধ্যমে", "স্বত্বগত উপযোগ সৃষ্টির মাধ্যমে", "রূপগত উপযোগ সৃষ্টির মাধ্যমে"], correct: 3 },
+  { q: "বিজ্ঞাপন কী ধরনের উপযোগ সৃষ্টি করে?", opts: ["স্থানগত", "কালগত", "স্বত্বগত", "জ্ঞানগত"], correct: 3 },
+  { q: "পণ্যের ওজন, আকার, রং ইত্যাদি সঠিক মানের সীমা নির্ধারণ ব্যবসায়ের কোন ধরনের কাজ?", opts: ["মোড়কীকরণ", "প্রমিতকরণ", "পর্যাযিতকরণ", "বাজারজাতকরণ প্রসার"], correct: 1 },
+  { q: "একটি ব্যবসায় গঠনের মূল উপাদান কী?", opts: ["অর্থ", "পরিবেশ", "উদ্যোগ", "নীতি"], correct: 0 },
+  { q: "কোনটি পেশাগত সেবা?", opts: ["চিকিৎসা", "জ্বালানি", "বিদ্যুৎ", "হোটেল"], correct: 0 },
+  { q: "ব্যবসায়ের ভূষণ কোনটি?", opts: ["মুনাফা", "সেবা", "সুনাম", "শৃঙ্খলা"], correct: 2 },
+  { q: "সামাজিক ব্যবসায়ের মূলনীতি কয়টি?", opts: ["৪", "৫", "৬", "৭"], correct: 3 },
+
+  // ইমেজ ৬ (847dd8b3) - সাধারণ বহুনির্বাচনি প্রশ্ন
+  { q: "ব্যবসায়ের মুখ্য উদ্দেশ্য কী?", opts: ["মুনাফা অর্জন", "সামাজিক কল্যাণ", "সম্পদ সর্বাধিকরণ", "মূলধন গঠন"], correct: 0 },
+  { q: "ব্যবসায় ক্রমবিকাশের কোন যুগে শিল্পবিপ্লব হয়েছিল?", opts: ["প্রাথমিক", "মধ্য", "আধুনিক", "আদিম"], correct: 2 },
+  { q: "আধুনিক যুগে কোন উপাদানটি ব্যবসায়ের ক্ষেত্রে নতুন মাত্রা সংযোজন করেছে?", opts: ["মুদ্রা প্রচলন", "ভোক্তাকেন্দ্রিক বাজার", "শিল্পবিপ্লব", "ব্যবসায়ী সংঘ"], correct: 1 },
+  { q: "কোন কাজে মুনাফা অর্জন বিলম্বে হয়?", opts: ["শিল্পে", "বাণিজ্যে", "বিক্রয়ে", "প্রত্যক্ষ সেবায়"], correct: 0 },
+  { q: "কোনটি প্রাথমিক শিল্পের অন্তর্ভুক্ত?", opts: ["প্রজনন", "বিশ্লেষণ", "নির্মাণ", "সেবা পরিবেশক"], correct: 0 },
+  { q: "কোনটি প্রাথমিক শিল্পের অন্তর্ভুক্ত নয়?", opts: ["প্রজনন", "কৃষি", "সংযোজন", "নিষ্কাশন"], correct: 2 },
+  { q: "মাছ ধরা কোন ধরনের শিল্প?", opts: ["নিষ্কাশন", "যৌগিক", "প্রজনন", "সংযুক্ত"], correct: 0 },
+  { q: "মোবাইল ফোন কোন জাতীয় শিল্প?", opts: ["সংযোজন", "নির্মাণ", "প্রক্রিয়াকরণ", "যৌগিক"], correct: 0 },
+  { q: "যৌগিক শিল্পের উদাহরণ কোনটি?", opts: ["ন্যাপথলিন", "মোবাইল", "চিনি", "সার"], correct: 3 },
+  { q: "আখ থেকে চিনি উৎপাদন কোন শিল্পের অন্তর্গত?", opts: ["সংযোজন", "যৌগিক", "বিশ্লেষণ", "প্রক্রিয়াভিত্তিক"], correct: 3 },
+  { q: "সাধারণত পণ্য ক্রয়-বিক্রয়কে কী বলে?", opts: ["ব্যবসায়", "বিনিময়", "বাণিজ্য", "শিল্প"], correct: 1 },
+  { q: "কোনটি বাণিজ্য?", opts: ["মাছ চাষ", "রাস্তা নির্মাণ", "পণ্য পরিবহন", "কয়লা উত্তোলন"], correct: 2 },
+  { q: "বিজ্ঞাপন ব্যবসায়ের কোন ধরনের প্রতিবন্ধকতা দূর করে?", opts: ["স্থানগত", "জ্ঞানগত", "স্বত্বগত", "কালগত"], correct: 1 },
+  { q: "নিচের কোনটি বিজ্ঞাপনের মাধ্যম বহির্ভূত?", opts: ["সাইনবোর্ড", "টেলিভিশন", "সংবাদপত্র", "আকর্ষণীয় মোড়ক"], correct: 3 },
+  { q: "বাজারজাতকরণ প্রসার কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["কালগত", "স্থানগত", "স্বত্বগত", "জ্ঞানগত"], correct: 3 },
+  { q: "কোনটি প্রত্যক্ষ সেবার অন্তর্গত?", opts: ["প্রকৌশল", "ওষুধ উৎপাদন", "মধু সংগ্রহ", "মাছ চাষ"], correct: 0 },
+  { q: "ব্যবসায়ের মৌলিক ও গুরুত্বপূর্ণ কাজ কোনটি?", opts: ["মুনাফা অর্জন", "ক্রয়", "বিক্রয়", "পরিবহন"], correct: 1 },
+  { q: "পণ্যদ্রব্যকে তার প্রকৃতি, রং ও গুণাগুণের ওপর ভিত্তি করে বিভক্ত করাকে কী বলে?", opts: ["পর্যাযিতকরণ", "প্রমিতকরণ", "একত্রকরণ", "বণ্টনকরণ"], correct: 0 },
+  { q: "নিচের কোনটির সাথে পর্যাযিতকরণ সম্পর্কিত?", opts: ["ব্যবস্থাপনা", "বাজারজাতকরণ", "অর্থনীতি", "অর্থায়ন"], correct: 1 },
+  { q: "কোনটি ব্যবসায়ের কাজের সাথে বেশি সম্পৃক্ত?", opts: ["মোড়কীকরণ", "নগরায়ন", "দক্ষতা বৃদ্ধি", "সঞ্চয় সৃষ্টি"], correct: 0 },
+  { q: "কোনো নতুন পণ্য বাজারে নিয়ে আসার আগে কী করতে হয়?", opts: ["মূল্য হ্রাস", "বাজার গবেষণা", "আকর্ষণীয় মোড়ক", "উদ্ভাবন ও উন্নয়ন"], correct: 1 },
+  { q: "খাদ্যমান সুরক্ষায় মোড়কীকরণ কোন ধরনের উপযোগ সৃষ্টিতে ভূমিকা রাখে?", opts: ["স্থানগত", "কালগত", "জ্ঞানগত", "অর্থসংস্থানগত"], correct: 1 },
+  { q: "কত সালে সামাজিক ব্যবসায়ের ধারণাটি প্রবর্তিত হয়?", opts: ["১৯৮৭ সালে", "১৯৯৭ সালে", "২০০৭ সালে", "২০১৭ সালে"], correct: 2 },
+  { q: "কোনটি সামাজিক ব্যবসায়ের সাথে সম্পর্কিত?", opts: ["একচেটিয়া ব্যবসায়ের প্রসার", "উচ্চমূল্যে পণ্য বিক্রয়", "বিনিয়োগকারীর মূলধন ফেরত দেওয়া", "ব্যক্তিগত আর্থিক স্বার্থ রক্ষা"], correct: 2 },
+  { q: "ব্যবসায়ের সামাজিক গুরুত্ব নিচের কোনটি?", opts: ["সম্পদের সুষ্ঠু ব্যবহার", "সঞ্চয়ে উৎসাহ দান", "জীবনযাত্রার মানোন্নয়ন", "শ্রম বিভাগের সুফল"], correct: 2 },
+
+
+  // --- দ্বিতীয় পত্র: ব্যবস্থাপনার ধারণা ও কার্যাবলি ---
+
+  // ইমেজ ৮ (f7eca5c0) - ব্যবস্থাপনার ধারণা অধ্যায়
+  { q: "Management শব্দটি এসেছে ইতালীয় কোন শব্দ থেকে?", opts: ["Managiare", "Managgiary", "Managiary", "Maneggiare"], correct: 3 },
+  { q: "Management শব্দটির সমার্থক কোনটি?", opts: ["To control", "To handle", "To coordinate", "To motive"], correct: 1 },
+  { q: "গ্রিক সভ্যতায় ব্যবস্থাপনার কোন ধরনের উন্নয়ন ঘটে?", opts: ["গণতান্ত্রিক ব্যবস্থাপনা", "সাংগঠনিক ক্ষমতা", "চিন্তাধারার উন্নয়ন", "কর্মী ব্যবস্থাপনা"], correct: 0 },
+  { q: "‘প্রত্যেক কর্মীকে তার যোগ্যতা অনুযায়ী কাজ ভাগ করে দিতে হবে’— উক্তিটি কার?", opts: ["সক্রেটিস", "প্লেটো", "রবার্ট ওয়েন", "গাজ্জালি"], correct: 1 },
+  { q: "The Code of Hammurabi রচিত হয়েছিল কোন সভ্যতাকালে?", opts: ["মিশরীয়", "ব্যাবিলনীয়", "গ্রিক", "রোমান"], correct: 1 },
+  { q: "কত খ্রিষ্টাব্দে লুকা প্যাসিওলি দুতরফা হিসাবরক্ষণ পদ্ধতি আলোকপাত করেন?", opts: ["১১০০", "১৪৯৪", "১৫০০", "১৭৬৭"], correct: 1 },
+  { q: "স্যার থমাস মুর কর্তৃক প্রণীত গ্রন্থের নাম কী?", opts: ["নসিহাত আল মূলক", "ওয়েলস অব নেশন", "ইউটোপিয়া", "ইউনেশিয়া"], correct: 2 },
+  { q: "মানবসম্পদ ব্যবস্থাপনার জনক কে?", opts: ["হেনরি ফেয়ল", "এলটন মেয়ো", "এফ ডব্লিউ টেইলর", "সক্রেটিস"], correct: 1 },
+  { q: "ব্যবস্থাপনাকে জ্ঞানের পৃথক শাখা হিসেবে কে তুলে ধরেছেন?", opts: ["হেনরি ফেয়ল", "হেনরি মিনজ্ বার্গ", "এফ ডব্লিউ টেইলর", "সক্রেটিস"], correct: 0 },
+  { q: "ফ্রাঙ্ক বাঙ্কার গিলব্রেথের নাম নিচের কোন কাজের সাথে বিশেষভাবে স্মরণীয়?", opts: ["ঠিকাদার মজুরি প্রথা", "হথর্ন গবেষণা", "সময় ও গতি নিরীক্ষা", "যন্ত্রপাতি বিন্যাস"], correct: 2 },
+  { q: "আনুষ্ঠানিকভাবে প্রথম ব্যবস্থাপনা রীতি পদ্ধতির তাত্ত্বিক বিশ্লেষণ করেন কে?", opts: ["হেনরি ফেয়ল", "এফ ডব্লিউ টেইলর", "রবার্ট ওয়েন", "ডগলাস ম্যাকগ্রেগর"], correct: 1 },
+  { q: "এলটন মেয়ো ব্যবস্থাপনার কোন তত্ত্ব দেওয়ার জন্য বিখ্যাত?", opts: ["Principles of Management", "Social System Theory", "Social System Approach", "The Hawthorn Studies"], correct: 3 },
+  { q: "ডগলাস মারে ম্যাকগ্রেগর কোন যুগের ব্যবস্থাপনাবিদ?", opts: ["মধ্যযুগ", "শিল্প বিপ্লব যুগ", "শিল্প বিপ্লব পরবর্তী যুগ", "আধুনিক যুগ"], correct: 2 },
+  { q: "MBO ধারণার প্রবক্তা কে?", opts: ["এলটন মেয়ো", "এফ ডব্লিউ টেইলর", "ডগলাস ম্যাকগ্রেগর", "পি.এফ. ড্রুকার"], correct: 3 },
+  { q: "MBO-এর পূর্ণরূপ কী?", opts: ["Management By Operations", "Managing Business Objectives", "Management By Objectives", "Managing Business Operations"], correct: 2 },
+  { q: "উদ্দেশ্যভিত্তিক ব্যবস্থাপনা ধারণার প্রবক্তা কে?", opts: ["এস.পি.রবিন্স", "পি.এফ.ড্রুকার", "ডগলাস ম্যাকগ্রেগর", "আব্রাহাম মাসলো"], correct: 1 },
+  { q: "ব্যবস্থাপনার মৌলিক উপকরণ কয়টি?", opts: ["২টি", "৪টি", "৬টি", "৮টি"], correct: 2 },
+  { q: "ব্যবস্থাপনার উপকরণগুলোকে সংক্ষেপে '6M' নামে প্রকাশ করেন কে?", opts: ["ফিলিপ কোটলার", "লুথার গুলিক", "টেরি ও ফ্রাঙ্কলিন", "অ্যাডাম স্মিথ"], correct: 2 },
+  { q: "ব্যবস্থাপনার মূল কাজ কোনটি?", opts: ["সংগঠন", "প্রেষণা", "নিয়ন্ত্রণ", "পরিকল্পনা"], correct: 3 },
+  { q: "ব্যবস্থাপনার কোন কাজের সাথে মনস্তাত্ত্বিক বিষয় গভীরভাবে জড়িত?", opts: ["সংগঠন", "কর্মীসংস্থান", "পরিকল্পনা", "নিয়ন্ত্রণ"], correct: 1 },
+  { q: "পদোন্নতি প্রদান ব্যবস্থাপনার কোন কাজের মধ্যে পড়ে?", opts: ["সংগঠিতকরণ", "নির্দেশনা", "কর্মীসংস্থান", "সমন্বয়সাধন"], correct: 2 },
+  { q: "ব্যবস্থাপনার কার্যকারিতা কিসের ওপর নির্ভর করে?", opts: ["পরিকল্পনা", "নির্দেশনা", "প্রেষণা", "নিয়ন্ত্রণ"], correct: 1 },
+  { q: "কোনটির মাধ্যমে পরিকল্পনা সংশোধন করা হয়?", opts: ["প্রেষণা", "নিয়ন্ত্রণ", "নির্দেশনা", "সংগঠন"], correct: 1 },
+  { q: "‘ব্যবস্থাপনা সর্বজনীন’— কে বলেছেন?", opts: ["সক্রেটিস", "প্লেটো", "অ্যারিস্টটল", "হেনরি ফেয়ল"], correct: 0 },
+  { q: "কাজ সম্পাদনের কতিপয় ধারাবাহিক পদক্ষেপকে কী বলে?", opts: ["নীতি", "রীতি", "পদ্ধতি", "প্রক্রিয়া"], correct: 3 },
+
+  // ইমেজ ৯ (c5950c13) - স্তরের বিন্যাস ও কাজ
+  { q: "ব্যবস্থাপনার শেষ বা চূড়ান্ত কাজ কোনটি?", opts: ["প্রেষণা", "নির্দেশনা", "নিয়ন্ত্রণ", "সমন্বয়"], correct: 2 },
+  { q: "মধ্য পর্যায়ের ব্যবস্থাপকদের দায়িত্ব কোনটি?", opts: ["শ্রমিক-কর্মীদের তত্ত্বাবধান", "বিভাগীয় পরিকল্পনা প্রণয়ন", "নীতি নির্ধারণ", "দীর্ঘমেয়াদি পরিকল্পনা প্রণয়ন"], correct: 1 },
+  { q: "কোনটি উচ্চস্তরের একক দায়িত্ব?", opts: ["নিয়ন্ত্রণ", "প্রেষণা", "সংগঠন", "দীর্ঘমেয়াদি পরিকল্পনা"], correct: 3 },
+  { q: "পিয়াল একটি কোম্পানির উৎপাদন ব্যবস্থাপক। তিনি সাধারণ ব্যবস্থাপকের পরিকল্পনা মোতাবেক উৎপাদন বাড়ানোর জন্য উৎপাদন বিভাগের কাজ পরিচালনা করেন। এখানে পিয়াল কোন পর্যায়ের ব্যবস্থাপক?", opts: ["উচ্চ", "মধ্য", "নিম্ন", "নিম্ন-মধ্য"], correct: 1 },
+
+  // ইমেজ ১০ (44c3ebfc) - সভ্যতার ইতিহাস ও ব্যবস্থাপনা
+  { q: "Management শব্দটি কোন দেশি শব্দ থেকে এসেছে?", opts: ["ইতালি", "কানাডা", "জার্মানি", "বাংলাদেশ"], correct: 0 },
+  { q: "ব্যবস্থাপনার উন্নয়নের ইতিহাসে সবচেয়ে প্রাচীন সভ্যতা কোনটি?", opts: ["মিশরীয় সভ্যতা", "ব্যাবিলনীয় সভ্যতা", "গ্রিক সভ্যতা", "রোম সভ্যতা"], correct: 0 },
+  { q: "শিল্প বিপ্লবের সময়কাল কত?", opts: ["১৯৫১ – বর্তমান", "১৭৫০ – ১৮৫০", "১৮৫১ – ১৯৫০", "০ – ১৯৪৭"], correct: 1 },
+  { q: "শিল্প বিপ্লব প্রথম ঘটে কোন দেশে?", opts: ["জাপান", "চীন", "যুক্তরাজ্য", "ইংল্যান্ড"], correct: 3 },
+  { q: "আধুনিক কর্মী ব্যবস্থাপনার জনক কে?", opts: ["হেনরি ফেয়ল", "এফ. ডব্লিউ. টেইলর", "থমাস মুর", "রবার্ট ওয়েন"], correct: 3 },
+  { q: "নিরাপত্তা ও মজুরি ব্যবস্থাপনা চালু হয় কোন সভ্যতায়?", opts: ["মিশরীয় সভ্যতায়", "ব্যাবিলনীয় সভ্যতায়", "চৈনিক সভ্যতায়", "গ্রিক সভ্যতায়"], correct: 1 },
+  { q: "শিল্প বিপ্লব কালের ব্যবস্থাপনাবিদ কে?", opts: ["রবার্ট ওয়েন", "এফ.ডব্লিউ. টেইলর", "হেনরি ফেয়ল", "হেনরি এল গ্যান্ট"], correct: 0 },
+  { q: "F. W. Taylor কোন যুগের ব্যবস্থাপনাবিদ?", opts: ["আধুনিক", "শিল্পবিপ্লবকালীন", "প্রাচীন", "মধ্য"], correct: 0 },
+  { q: "কে সমন্বয়ের নীতির ক্ষেত্রে অধিক গুরুত্বপূর্ণ অবদান রাখেন?", opts: ["F. W. Taylor", "Henri Fayol", "Mary Parker Follett", "Elton Mayo"], correct: 2 },
+  { q: "সিস্টেম মতবাদের প্রবক্তা কে?", opts: ["এলটন মেয়ো", "অলিভার শেলডন", "হুগো মুনস্টারবার্গ", "চেস্টার আই বার্নার্ড"], correct: 3 },
+  { q: "POSDCORB-এর আবিষ্কারক কে?", opts: ["হেনরি ফেয়ল", "এল. গুলিক", "লুইস. এ এলেন", "চার্লস ব্যাবেজ"], correct: 1 },
+  { q: "6M বলতে কী বোঝায়?", opts: ["মৌলিক সম্পদসমূহ", "ব্যবস্থাপনা প্রক্রিয়া", "মৌলিক কার্যাবলি", "ব্যবস্থাপনার মূলনীতি"], correct: 0 },
+  { q: "কোন উপাদানটি ব্যবস্থাপনার 6M বহির্ভূত?", opts: ["সিদ্ধান্ত গ্রহণ", "পদ্ধতি", "বাজার", "অর্থ"], correct: 0 },
+  { q: "কোনটি ব্যবস্থাপনার মৌলিক উপাদান?", opts: ["পরিকল্পনা", "সংগঠন", "মানুষ", "নিয়ন্ত্রণ"], correct: 2 },
+  { q: "হেনরি ফেয়ল ব্যবস্থাপনার কার্যাবলিকে কয়ভাগে ভাগ করেছেন?", opts: ["৩", "৪", "৫", "৬"], correct: 2 },
+
+  // ইমেজ ১১ (78f22181) - ব্যবস্থাপনার কার্যাবলি অতিরিক্ত প্রশ্ন
+  { q: "কার্য সম্পাদনের জন্য গৃহীত কার্যক্রমকে কী বলে?", opts: ["যন্ত্রপাতি", "মালামাল", "পদ্ধতি", "শ্রমিক"], correct: 2 },
+  { q: "ব্যবস্থাপনার প্রথম কাজ কোনটি?", opts: ["প্রেষণা", "নির্দেশনা", "নিয়ন্ত্রণ", "পরিকল্পনা"], correct: 3 },
+  { q: "ব্যবস্থাপনার শেষ কাজ কোনটি?", opts: ["প্রেষণা", "নিয়ন্ত্রণ", "সমন্বয়", "পরিকল্পনা"], correct: 1 },
+  { q: "ব্যবস্থাপনা চক্রে নিয়ন্ত্রণ পরবর্তী কাজ কোনটি?", opts: ["সমন্বয়", "প্রেষণা", "পরিকল্পনা", "কর্মীসংস্থান"], correct: 2 },
+  { q: "ব্যবস্থাপনার কোন কাজ অধস্তন কর্মীদের ভুল-ত্রুটি সংশোধনে সহায়তা করে?", opts: ["পরিকল্পনা", "সংগঠন", "নির্দেশনা", "নিয়ন্ত্রণ"], correct: 3 },
+  { q: "ব্যবস্থাপনা চক্র বলতে কোনটির পর্যায়ক্রমিক আবর্তনকে বোঝায়?", opts: ["উদ্দেশ্য", "কাজ", "নীতি", "উপকরণ"], correct: 1 },
+  { q: "ব্যবস্থাপনা চক্রের কোন কাজটি সর্বপ্রথম করতে হয়?", opts: ["পরিকল্পনা", "কর্মী নিয়োগ", "সংগঠিতকরণ", "নিয়ন্ত্রণ"], correct: 0 },
+  { q: "ব্যবস্থাপনা চক্রের কোন কাজটি অন্যান্য সব কাজের ভিত্তি হিসেবে বিবেচিত হয়?", opts: ["নিয়ন্ত্রণ", "সংগঠন", "পরিকল্পনা", "নির্দেশনা"], correct: 2 },
+  { q: "ব্যবস্থাপনা চক্রে সংগঠনের পরের কাজ কোনটি?", opts: ["পরিকল্পনা", "কর্মীসংস্থান", "নির্দেশনা", "নিয়ন্ত্রণ"], correct: 1 },
+  { q: "কম্পিউটারের আবিষ্কারক কে?", opts: ["বিল গেটস", "চার্লস ব্যাবেজ", "জেমস ওয়াট", "নিউটন"], correct: 1 },
+  { q: "ব্যবস্থাপনার স্তর কয়টি?", opts: ["২", "৩", "৪", "৫"], correct: 1 },
+  { q: "আসমা বেগম কার্যক্ষেত্রে নারী কর্মীদের সরাসরি তদারকির দায়িত্ব পালন করেন। তিনি কোন স্তরের ব্যবস্থাপক?", opts: ["উচ্চ", "মধ্য", "নিম্ন", "উচ্চ ও নিম্ন"], correct: 2 },
+  { q: "প্রতিষ্ঠানের নীতি ও পরিকল্পনা প্রণয়নের দায়িত্ব ব্যবস্থাপনার কোন পর্যায়ের?", opts: ["উচ্চ পর্যায়ের", "মধ্য পর্যায়ের", "নিম্ন পর্যায়ের", "বিভাগীয় পর্যায়ের"], correct: 0 },
+  { q: "ব্যবস্থাপনার নিয়ন্ত্রণে কোন ধরনের দক্ষতার বেশি প্রয়োজন হয়?", opts: ["কারিগরি", "মানবীয়", "অনুধাবনমূলক", "ধারণাগত"], correct: 0 },
+  { q: "মি. জলিল একটি প্রতিষ্ঠানের নির্বাহী পরিচালক। তার প্রণীত পরিকল্পনা বাস্তবায়ন করবেন—", opts: ["পরিচালক", "ফোরম্যান", "চেয়ারম্যান", "মহাব্যবস্থাপক"], correct: 3 },
+  { q: "ব্যবস্থাপনার কোন স্তর প্রতিষ্ঠানের কর্মীদের কাজ সরাসরি তদারকি করে?", opts: ["মধ্য", "উচ্চ", "নিম্ন", "উচ্চ ও মধ্য"], correct: 2 },
+  { q: "ফোরম্যান একটি প্রতিষ্ঠানের কোন পর্যায়ের ব্যবস্থাপক?", opts: ["প্রশাসন", "উচ্চ", "নিম্ন", "মধ্য"], correct: 2 },
+  { q: "‘ব্যবস্থাপনা সর্বজনীন’—কে বলেছেন?", opts: ["প্লেটো", "অ্যারিস্টটল", "সক্রেটিস", "রুশো"], correct: 2 },
+
+  // ইমেজ ১২ (d5648ac3) - বিশ্ববিদ্যালয় ভর্তি পরীক্ষা (ব্যবস্থাপনা)
+  { q: "শীর্ষ স্তরের ব্যবস্থাপনায় সবচেয়ে উল্লেখযোগ্য দক্ষতা হলো—", opts: ["ধারণাগত", "প্রযুক্তিগত", "পদ্ধতিগত", "জ্ঞানীয়"], correct: 0 },
+  { q: "কারিগরি দক্ষতা বিশেষভাবে প্রয়োজন হয়—", opts: ["উচ্চ পর্যায়ে", "প্রথম পর্যায়ে", "মধ্য পর্যায়ে", "সর্ব পর্যায়ের ব্যবস্থাপকদের"], correct: 1 },
+  { q: "নিচের কোন ব্যক্তি শিল্প মনোবিজ্ঞানী?", opts: ["Mary Parker Follett", "Sir Henry towny", "Lillian M. Gilbreth", "Henri Fayol"], correct: 2 },
+  { q: "নিচের কোনটি ব্যবস্থাপনার একটি সম্পদ?", opts: ["প্রণালি", "পদ্ধতি", "বাজেট", "তথ্য"], correct: 1 },
+  { q: "“ব্যবস্থাপনা হচ্ছে অন্যের দ্বারা কাজ করিয়ে নেওয়ার একটি কলা” উক্তিটি কার?", opts: ["মিনজবার্গ", "হেনরি ফেয়ল", "টেলর", "হারল্ড কুঞ্জ"], correct: 3 },
+  { q: "এলটন মেয়ো’র নাম কোন কাজের সাথে বিশেষভাবে স্মরণীয়?", opts: ["সময় ও গতি পরীক্ষা", "কাজ", "কার্যপরিবেশ এবং উৎপাদনশীলতা", "মনোবিজ্ঞান"], correct: 3 },
+  { q: "শ্রম বিভাজন ধারণাটির প্রবক্তা কে?", opts: ["Henri Fayol", "Elton Mayo", "F.W. Taylor", "Adam Smith"], correct: 3 },
+  { q: "ক্ষমতা বিকেন্দ্রীভূত থাকে কোন স্তরে?", opts: ["উচ্চ স্তরে", "নিম্ন স্তরে", "মধ্য স্তরে", "উচ্চ ও মধ্য স্তরে"], correct: 1 },
+  { q: "প্রতিষ্ঠানের মধ্যম পর্যায়ের ব্যবস্থাপক কে?", opts: ["সচিব", "ব্যবস্থাপনা পরিচালক", "উৎপাদন ব্যবস্থাপক", "ফোরম্যান"], correct: 2 },
+  { q: "উচ্চ উৎপাদনশীলতা অর্জনের জন্য কর্মীদের উদ্বুদ্ধ করে — ব্যবস্থাপনা।", opts: ["মধ্য স্তরের", "নিম্ন স্তরের", "উচ্চ স্তরের", "কোনোটিই নয়"], correct: 1 },
+  { q: "শিল্পে উৎপাদন বৃদ্ধির জন্য শ্রমবিভাগের ওপর গুরুত্বারোপ করেন কে?", opts: ["জেমস স্টুয়ার্ড", "এডাম স্মিথ", "রবার্ট ওয়েন", "চার্লস ব্যাবেজ"], correct: 2 },
+  { q: "ব্যবস্থাপনা চক্রের নিয়ন্ত্রণ পরবর্তী কাজ কী?", opts: ["সমন্বয়সাধন", "প্রেষণা", "পরিকল্পনা", "কর্মীসংস্থান"], correct: 2 },
+  { q: "\"Division of Labor\" ধারণাটি প্রথম কে দিয়েছেন?", opts: ["Adam Smith", "Robert Owen", "F.W. Taylor", "Henri Fayol"], correct: 0 },
+
+  // ইমেজ ১৩ (01ed8746) - ব্যবস্থাপনার মৌলিক ধারণা চূড়ান্ত অংশ
+  { q: "কে আমলাতন্ত্রের ধারণাটি প্রবর্তন করেন?", opts: ["ম্যাক্স ওয়েবার", "হেনরি ফেয়ল", "ফ্রেডরিক টেলর", "ডগলাস ম্যাকগ্রেগর"], correct: 0 },
+  { q: "ব্যবস্থাপনা চক্র বলতে নিচের কোনটির পর্যায়ক্রমিক আবর্তনকে বোঝায়?", opts: ["উদ্দেশ্য", "কর্ম", "নীতি", "উপকরণ"], correct: 1 },
+  { q: "'Code of Hammurabi' রচিত হয়েছিল কোন সভ্যতায়?", opts: ["মিশরীয় সভ্যতায়", "ব্যাবিলনীয় সভ্যতায়", "গ্রিক সভ্যতায়", "রোমান সভ্যতায়"], correct: 1 },
+  { q: "'MBO' ধারণাটি কে প্রবর্তন করেন?", opts: ["Peter F. Drucker", "Robert Owen", "Henri Fayol", "Elton Meyo"], correct: 0 },
+  { q: "\"Principles of Scientific Management\"— গ্রন্থটি কে রচনা করেন?", opts: ["Henri Fayol", "F.W. Taylor", "Robert Owen", "Adam Smith"], correct: 1 },
+  { q: "“সাংগঠনিক কাজে সুনির্দিষ্ট নিয়ম-নীতি ব্যবহার করতে হবে”— এ নীতিটি কে দিয়েছেন?", opts: ["ম্যাক্স ওয়েবার", "হেনরি ফেয়ল", "এফ. ডব্লিউ. টেলর", "এলটন মেয়ো"], correct: 1 },
+  { q: "নিচের কোনটি ব্যবস্থাপনার কাজ নয়?", opts: ["পরিকল্পনা", "নেতৃত্ব", "সংগঠন", "মূল্য নির্ধারণ"], correct: 3 },
+  { q: "MBO-এর পূর্ণরূপ হলো—", opts: ["Management by Operations", "Managing Business Operations", "Managing Business Objectives", "Management by Objectives"], correct: 3 },
+  { q: "‘দি ওয়েলথ অব নেশনস’ নামক প্রসিদ্ধ বইয়ের লেখক কে?", opts: ["ফ্রেডরিক টেলর", "হেনরি মিনজবার্গ", "এডাম স্মিথ", "হেনরি ফেয়ল"], correct: 2 },
+  { q: "ব্যবস্থাপনা প্রক্রিয়ার সর্বশেষে গ্রহণযোগ্য ধারাবাহিকতা কোনটি?", opts: ["পরিকল্পনা - সংগঠন - নেতৃত্ব - নিয়ন্ত্রণ", "পরিকল্পনা - নিয়ন্ত্রণ - সংগঠন - নেতৃত্ব", "নিয়ন্ত্রণ - সংগঠন - পরিকল্পনা - নেতৃত্ব", "পরিকল্পনা - নেতৃত্ব - সংগঠন - নিয়ন্ত্রণ"], correct: 0 },
+  { q: "কোনটি ব্যবস্থাপনা প্রক্রিয়ার উপাদান নয়?", opts: ["পরিকল্পনা", "সংগঠন", "প্রনোদনা", "সহযোগিতা"], correct: 3 },
+  { q: "হথর্ন স্টাডিজের প্রবক্তা কে?", opts: ["হেনরি ফেয়ল", "ম্যাককিনজি", "হেনরি মিনজবার্গ", "এলটন মেয়ো"], correct: 3 },
+  { q: "POSDCORB তত্ত্বের প্রবক্তা কে?", opts: ["হেনরি ফেয়ল", "এল. গুলিক", "নিউম্যান", "এফ. ডব্লিউ. টেলর"], correct: 1 },
+  { q: "ব্যবস্থাপনার মুখ্য উদ্দেশ্য কোনটি?", opts: ["মানবসম্পদ উন্নয়ন", "সমন্বয়সাধন", "প্রতিষ্ঠানের সুনাম বৃদ্ধি", "মুনাফা অর্জন"], correct: 3 },
+  { q: "কোনটি ব্যবস্থাপনার কার্য?", opts: ["ঝুঁকি গ্রহণ", "বাজারজাতকরণ", "সংগঠন", "মুনাফা অর্জন"], correct: 2 },
+  { q: "প্রথম শিল্প বিপ্লব কোথায় ও কত সালে ঘটেছিল?", opts: ["জার্মানি ১৮৫০", "যুক্তরাষ্ট্র ১৮৫০", "ইউরোপ ১৮৬০", "যুক্তরাজ্য ১৭৬০"], correct: 3 },
+  { q: "ব্যবস্থাপনার ১ম কাজ—", opts: ["উদ্যোগ গ্রহণ", "পরিকল্পনা", "অর্থসংস্থান", "কর্ম প্রশিক্ষণ"], correct: 1 },
+  { q: "নিচের কোনটি উৎপাদনের উপাদান নয়?", opts: ["ভূমি", "শ্রম", "মূলধন", "বিমা"], correct: 3 },
+  { q: "একজন ব্যবস্থাপকের প্রত্যক্ষ তত্ত্বাবধানে অধীনস্থ কর্মীর সংখ্যাকে বলা যায়—", opts: ["তদারকের পরিসর", "ব্যবস্থাপকের পরিসর", "নিয়ন্ত্রণের পরিসর", "সবগুলোই"], correct: 0 }
+
+],
 'mgt2_ch2': [{ q: 'ব্যবস্থাপনার নীতিমালা কয়টি?', opts: ['১০টি', '১২টি', '১৪টি', '১৬টি'], correct: 2 }],
 'mgt2_ch3': [{ q: 'পরিকল্পনা কোন ব্যবস্থাপনা কার্যাবলীর প্রথম ধাপ?', opts: ['সংগঠন', 'নিয়ন্ত্রণ', 'পরিকল্পনা', 'সমন্বয়'], correct: 2 }],
 'mgt2_ch4': [{ q: 'সংগঠিতকরণের ভিত্তি কী?', opts: ['কাজ', 'ব্যক্তি', 'পুঁজি', 'লক্ষ্য'], correct: 0 }],
@@ -527,8 +1624,104 @@ const QB={
 'mgt2_ch8': [{ q: 'যোগাযোগের দিক বিবেচনায় কয় প্রকার?', opts: ['২ প্রকার', '৩ প্রকার', '৪ প্রকার', '৫ প্রকার'], correct: 0 }],
 'mgt2_ch9': [{ q: 'সমন্বয় সাধন কার কাজ?', opts: ['কর্মীর', 'মালিকের', 'ব্যবস্থাপকের', 'শ্রমিকের'], correct: 2 }],
 'mgt2_ch10': [{ q: 'নিয়ন্ত্রণ কোন ব্যবস্থাপনা কার্যের শেষ ধাপ?', opts: ['পরিকল্পনা', 'সংগঠন', 'নির্দেশনা', 'নিয়ন্ত্রণ'], correct: 3 }],
-'prod1_ch1': [{ q: 'উৎপাদন কোন ধরনের উপযোগ সৃষ্টি করে?', opts: ['স্থানগত', 'কালগত', 'রূপগত', 'স্বত্বগত'], correct: 2 }],
-'prod1_ch2': [{ q: 'উৎপাদনের প্রধান উপকরণ কয়টি?', opts: ['২টি', '৩টি', '৪টি', '৫টি'], correct: 2 }],
+'prod1_ch1': [{ q: 'উৎপাদন কোন ধরনের উপযোগ সৃষ্টি করে?', opts: ['স্থানগত', 'কালগত', 'রূপগত', 'স্বত্বগত'], correct: 2 },
+
+  // ইমেজ ১ (পৃষ্ঠা ৪৯)
+  { q: "উৎপাদনের মাধ্যমে পণ্যের কী সৃষ্টি হয়?", opts: ["ভোগ", "চাহিদা", "উপযোগ", "মালিকানা"], correct: 2 },
+  { q: "স্বত্বগত উপযোগ কীভাবে সৃষ্টি হয়?", opts: ["পণ্য উৎপাদনের মাধ্যমে", "ক্রয়-বিক্রয়ের মাধ্যমে", "পণ্য স্থানান্তরের মাধ্যমে", "পণ্য সংরক্ষণের মাধ্যমে"], correct: 1 },
+  { q: "মানুষের দৈনন্দিন জীবনের সব অর্থনৈতিক কার্যাবলি নিচের কোনটির ওপর নির্ভরশীল?", opts: ["ভোগ", "উৎপাদন", "সম্পদ", "দায়"], correct: 1 },
+  { q: "উৎপাদন অর্থ কী?", opts: ["প্রয়োগ করা", "উপযোগ সৃষ্টি করা", "কাজ করা", "চালনা করা"], correct: 1 },
+  { q: "উৎপাদন কোন ধরনের প্রক্রিয়া?", opts: ["গতিশীল", "স্থির", "চলমান", "মন্থর"], correct: 2 },
+  { q: "উৎপাদন ফলে কী সৃষ্টি হয়?", opts: ["পণ্য", "সেবা", "উপযোগ", "মুনাফা"], correct: 2 },
+  { q: "পণ্য বা সেবা কর্তৃক মানুষের অভাব মেটানোর ক্ষমতাকে কী বলে?", opts: ["উৎপাদন", "উপযোগ", "সংগঠন", "চাহিদা"], correct: 1 },
+  { q: "উৎপাদনের প্রত্যক্ষ কাজ কোনটি?", opts: ["রূপগত উপযোগ", "সময়গত উপযোগ", "স্থানগত উপযোগ", "মালিকানাগত উপযোগ"], correct: 0 },
+  { q: "অভাব পূরণের ক্ষমতাকে কী বলে?", opts: ["পণ্য", "সেবা", "উৎপাদন", "উপযোগ"], correct: 3 },
+  { q: "রামের গ্রামের বাড়িতে প্রচুর খেজুর গাছ আছে। তা থেকে প্রাপ্ত রস সে বিক্রি না করে গুড় তৈরি করে। রাম কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["স্বত্বগত", "স্থানগত", "রূপগত", "সেবাগত"], correct: 2 },
+  { q: "তুলা থেকে সুতা এবং সুতা থেকে কাপড় তৈরি করা হলে কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["স্থানগত", "সময়গত", "সেবাগত", "রূপগত"], correct: 3 },
+  { q: "উকিলের পরামর্শ কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["রূপগত", "স্বত্বগত", "স্থানগত", "সেবাগত"], correct: 3 },
+  { q: "কোনটি সেবাগত উপযোগের অন্তর্ভুক্ত?", opts: ["মা কর্তৃক সন্তান লালন-পালন", "অন্ধকে রাস্তা পারাপারে সহায়তা করা", "শিক্ষক কর্তৃক শ্রেণিকক্ষে ছাত্রদের পাঠদান", "সন্তান কর্তৃক অসুস্থ পিতামাতার সেবা করা"], correct: 2 },
+  { q: "কাপড় কেটে জামা তৈরি করলে কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["রূপগত", "স্থানগত", "সময়গত", "স্বত্বগত"], correct: 0 },
+  { q: "ক্রয়-বিক্রয় কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["রূপগত", "স্বত্বগত", "সময়গত", "স্থানগত"], correct: 1 },
+  { q: "পরিবহন কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["সময়গত", "স্থানগত", "রূপগত", "স্বত্বগত"], correct: 1 },
+  { q: "পরিবহনযোগে দিনাজপুর থেকে লিচু এনে ঢাকায় বিক্রির মাধ্যমে কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["স্থানগত", "সময়গত", "সেবাগত", "স্বত্বগত"], correct: 0 },
+  { q: "উৎপাদিত পণ্য এক জায়গা থেকে অন্য জায়গায় নিয়ে যাওয়ার মাধ্যমে কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["রূপগত", "স্থানগত", "কালগত", "স্বত্বগত"], correct: 1 },
+  { q: "মুনাফা লাভের আশায় ব্যবসায়ীদের গুদামজাতকরণের ফলে কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["স্থানগত", "সময়গত", "রূপগত", "স্বত্বগত"], correct: 1 },
+  { q: "কোনটির মাধ্যমে স্বত্বগত উপযোগ সৃষ্টি হয়?", opts: ["রূপান্তর", "হস্তান্তর", "বণ্টন", "সংরক্ষণ"], correct: 1 },
+  { q: "পরিবহন কোন ধরনের উপযোগ সৃষ্টি করে? [পুনরাবৃত্তি প্রশ্ন]", opts: ["সময়গত", "স্থানগত", "রূপগত", "স্বত্বগত"], correct: 1 },
+  { q: "কোন ধরনের উৎপাদনশীলতায় 'সময়ের একক' বিবেচনা করা হয়?", opts: ["আর্থিক", "কাঁচামালের", "সার্বিক", "শ্রমের"], correct: 3 },
+  { q: "নিচের কোনটি ব্যবসায়ের ঝুঁকি দূর করে?", opts: ["ব্যাংক", "পরিবহন", "বিমা", "গুদামজাতকরণ"], correct: 2 },
+  { q: "উৎপাদন ভোক্তার ক্ষেত্রে কী প্রভাব ফেলে?", opts: ["কর্মসংস্থান সৃষ্টি", "বিনিয়োগ সৃষ্টি", "আয় বাড়ায়", "জীবনযাত্রার মান বাড়ানো"], correct: 3 },
+
+  // ইমেজ ২ ও ৫ (পৃষ্ঠা ৫০ - বহুপদী সমাপ্তিসূচক প্রশ্ন)
+  { q: "উপযোগ সৃষ্টি করা যায়— i. পরিবহনের মাধ্যমে ii. গুদামজাতকরণের মাধ্যমে iii. বিজ্ঞাপনের মাধ্যমে। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 3 },
+  { q: "উৎপাদনের অর্থ হলো— i. উপযোগ সৃষ্টি ii. রূপগত পরিবর্তন iii. উপযোগ নিঃশেষ। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 0 },
+  { q: "উৎপাদনের বৈশিষ্ট্য হলো— i. অভাব মোচনের ক্ষমতা সৃষ্টি ii. উপযোগ সৃষ্টি iii. রূপগত পরিবর্তন। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 3 },
+  { q: "সাধারণত অতিরিক্ত মূলধন সংগ্রহ করা হয়— i. সম্পদের বিপরীতে ii. ঋণের বিপরীতে iii. জামানতের বিপরীতে। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 2 },
+  { q: "যন্ত্রের উৎপাদনশীলতা পরিমাপে প্রয়োজন— i. মোট উৎপাদনের পরিমাণ ii. মোট যন্ত্র সময় iii. রূপান্তর মূল্য। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 0 },
+  { q: "উৎপাদনশীলতা বের করার মাধ্যমে প্রতিষ্ঠানের উপকরণসমূহের— i. কার্যকারিতা মূল্যায়ন করা যায় ii. কার্যকারিতা কমানো যায় iii. কার্যকারিতা নিয়ন্ত্রণ করা যায়। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 1 },
+  { q: "উৎপাদনশীলতার আওতার অন্তর্ভুক্ত— i. কৃষি ক্ষেত্র ii. ঋণদান iii. গবেষণা ও উন্নয়ন। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 1 },
+  { q: "উৎপাদনশীলতার গুরুত্ব প্রকাশ পায়— i. উৎপাদন বাড়ানো ii. মুনাফা বাড়ানো iii. ব্যবসায় সংক্ষেপকরণ। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 0 },
+  { q: "উৎপাদনশীলতা বাড়ানো যায়— i. আধুনিক প্রযুক্তির মাধ্যমে ii. দক্ষ ব্যবস্থাপনা iii. খারাপ বিন্যাস। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 0 },
+  { q: "উৎপাদনশীলতা বাড়ানোর উপায় হলো— i. বেশি প্রচারমূলক কার্যক্রম ii. সঠিক বিন্যাস iii. গবেষণা ও উন্নয়ন। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 2 },
+  { q: "উৎপাদন ও উৎপাদনশীলতার পার্থক্য দেখা যায়— i. প্রকৃতি ii. পণ্য iii. উপযোগ। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 1 },
+  { q: "সঞ্চয় বেড়ে যায়— i. ভোগ বাড়ানোর মাধ্যমে ii. ভোগ নিয়ন্ত্রণের মাধ্যমে iii. ভোগ কমানোর মাধ্যমে। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 2 },
+  { q: "[উদ্দীপক ভিত্তিক] ফাহাদের সুতা তৈরি কোনটি সৃষ্টি করবে?", opts: ["সেবা", "উপযোগ", "ঝুঁকি", "মালিকানা"], correct: 1 },
+  { q: "[উদ্দীপক ভিত্তিক] ফাহাদের মূলধন সমস্যার সমাধান হবে যে প্রতিষ্ঠানের সহায়তায়— i. অর্থসংস্থানকারী প্রতিষ্ঠান ii. পরিবহন সমিতি iii. বাণিজ্যিক ব্যাংক। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 1 },
+
+  // ইমেজ ৩ (পৃষ্ঠা ৫২)
+  { q: "কোনটি প্রাকৃতিক সম্পদকে ব্যবহারের উপযোগী করে?", opts: ["বাজারজাতকরণ", "উৎপাদন", "ট্রেড", "ব্যবস্থাপনা"], correct: 1 },
+  { q: "সজল যুব উন্নয়ন একাডেমি থেকে প্রশিক্ষণ নিয়ে একটি হাঁস-মুরগির খামার স্থাপন করেন। এটি উৎপাদনের কোন খাতের অন্তর্গত?", opts: ["কৃষি", "শিল্প", "সেবা", "শিক্ষা"], correct: 0 },
+  { q: "নিচের কোনটিতে 'সংযোজিত মূল্য'কে বিবেচনা করা হয়?", opts: ["শ্রমের উৎপাদনশীলতা", "যন্ত্রের উৎপাদনশীলতা", "মালামালের উৎপাদনশীলতা", "আর্থিক উৎপাদনশীলতা"], correct: 3 },
+  { q: "কোনটি উৎপাদনের অন্তর্ভুক্ত?", opts: ["অর্থায়ন", "বণ্টন", "কৃষি", "প্রসার"], correct: 2 },
+  { q: "উৎপাদন ও উপকরণের অনুপাতকে কী বলে?", opts: ["উৎপাদন ক্ষমতা", "উৎপাদনের মাত্রা", "উৎপাদনশীলতা", "উৎপাদনের ব্যবস্থাপনা"], correct: 2 },
+  { q: "উৎপাদনশীলতাকে কীভাবে প্রকাশ করা যায়?", opts: ["মূল্য সূচকে", "পরিমাণ সূচকে", "আনুপাতিক হারে", "শতকরা হারে"], correct: 2 },
+  { q: "উৎপাদনশীলতা নয় কোনটি?", opts: ["মোট উৎপাদন / মোট উপকরণ", "মোট উৎপাদন / মোট শ্রমঘণ্টা", "মোট যন্ত্রসময় / মোট উৎপাদন", "মোট উৎপাদন / মোট মূলধন"], correct: 2 },
+  { q: "উৎপাদনশীলতা কী?", opts: ["উপকরণ ও শ্রমের অনুপাত", "শ্রমের ও উপকরণের অনুপাত", "উৎপাদন ও উপকরণের অনুপাত", "উৎপাদন ও উৎপাদনশীলতার অনুপাত"], correct: 2 },
+  { q: "কোনটি উৎপাদনশীলতার সূত্র?", opts: ["মোট উৎপাদনের মূল্য / মোট উপকরণের মূল্য", "মোট উৎপাদিত পণ্য / মোট শ্রমের পরিমাণ/ঘণ্টা", "মোট উৎপাদিত পণ্য / মোট যন্ত্রপাতি", "ইনপুট / আউটপুট"], correct: 0 },
+  { q: "একটি কারখানায় ৬০,০০০ টাকার পণ্য তৈরি করতে ৪,০০০ টাকার মালামাল ও ১,০০০ টাকার যন্ত্রপাতিজনিত ব্যয় হয়েছে। প্রতিষ্ঠানটির মালামালের উৎপাদনশীলতা হবে—", opts: ["১২", "১৫", "২০", "৬০"], correct: 1 },
+  { q: "উৎপাদন বাড়লে কোনটি বাড়বে?", opts: ["চাহিদা", "কর্মসংস্থান", "ভোগব্যয়", "বাজারমূল্য"], correct: 1 },
+  { q: "উৎপাদনশীলতা বাড়ার কারণ কোনটি?", opts: ["উৎপাদন নিয়ন্ত্রণ", "উৎপাদন দক্ষতা", "মান নিয়ন্ত্রণ", "মজুদ নিয়ন্ত্রণ"], correct: 1 },
+  { q: "উপযোগ হলো দ্রব্যের বিশেষ সামর্থ্য, যা মানুষের— i. অভাব পূরণ করতে পারে ii. চাহিদা পরিপূর্ণ করে iii. প্রয়োজন মেটাতে পারে। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 3 },
+  { q: "উৎপাদনের খাত হচ্ছে— i. কৃষি ii. শিল্প iii. সেবা। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 3 },
+  { q: "উৎপাদনের অর্থনৈতিক গুরুত্ব হলো— i. চাহিদা মেটানো ii. বিক্রি বাড়ানো iii. মানবকল্যাণ সাধন। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 1 },
+  { q: "সেবাগত উপযোগ অন্যান্য উপযোগ হতে ভিন্ন। কারণ— i. এটি অবস্তুগত উপকরণ তৈরি করে ii. এর ফলে সময়গত উপযোগ সৃষ্টি হয় iii. এর বিনিময় মূল্য রয়েছে। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 1 },
+  { q: "উৎপাদনের আওতা হলো— i. উপযোগ সৃষ্টি ii. উপকরণ সংগ্রহ iii. রূপান্তর প্রক্রিয়া। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 3 },
+  { q: "উৎপাদনশীলতা বেড়ে যাওয়ার ফলে— i. মুনাফা বাড়ে ii. বিনিয়োগ বাড়ে iii. পণ্যের মূল্য কমে। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 3 },
+  { q: "উৎপাদনশীলতা বাড়লে— i. উৎপাদন বাড়ে ii. মুনাফা বাড়ে iii. অর্থনৈতিক প্রবৃদ্ধি হয়। নিচের কোনটি সঠিক?", opts: ["i ও ii", "i ও iii", "ii ও iii", "i, ii ও iii"], correct: 3 },
+
+  // ইমেজ ৪ (অনুশীলনী পৃষ্ঠা)
+  { q: "উৎপাদনের মাধ্যমে পণ্যের কী সৃষ্টি হয়? [পুনরাবৃত্তি প্রশ্ন]", opts: ["মালিকানা", "উপযোগ", "উপকার", "চাহিদা"], correct: 1 },
+  { q: "কী রূপান্তরের মাধ্যমে ব্যবহার উপযোগী পণ্য বা সেবা উৎপাদন করা যায়?", opts: ["যন্ত্রপাতি", "দ্রব্য", "সময়", "কাঁচামাল"], correct: 3 },
+  { q: "উৎপাদনের সমার্থক শব্দ কোনটি?", opts: ["সৃষ্টি", "উৎপাদক", "উৎপাদনশীলতা", "পরিমাণ"], correct: 0 },
+  { q: "উৎপাদনের মাধ্যমে জনগণের জন্য কী সৃষ্টি হয়?", opts: ["অর্থ", "কর্মসংস্থান", "প্রতিযোগী", "মুদ্রাস্ফীতি"], correct: 1 },
+  { q: "প্রতিষ্ঠানে উদ্বৃত্তের সাথে কোনটি সম্পৃক্ত?", opts: ["লাভ", "ক্ষতি", "উৎপাদন", "ব্যয়"], correct: 0 },
+  { q: "পাউরুটি ফ্যাক্টরিটিতে কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["স্থানগত", "রূপগত", "সময়গত", "সেবাগত"], correct: 1 },
+  { q: "বিমানের মাধ্যমে পণ্যের কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["রূপগত", "স্বত্বগত", "স্থানগত", "সময়গত"], correct: 2 },
+  { q: "মালিকানা পরিবর্তনের ফলে কোন ধরনের উপযোগ সৃষ্টি হয়?", opts: ["স্বত্বগত", "স্থানগত", "কালগত", "রূপগত"], correct: 0 },
+  { q: "মোবাইল কোম্পানি কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["সেবাগত", "রূপগত", "স্থানগত", "মালিকানাগত"], correct: 0 },
+  { q: "হিমাগার বা গুদামজাতকরণ কোন ধরনের উপযোগ সৃষ্টি করে?", opts: ["রূপগত", "সময়গত", "স্থানগত", "স্বত্বগত"], correct: 1 },
+  { q: "এ বছর টমেটোর বাম্পার ফল হওয়ায় জনাব নীরব তার উৎপাদিত টমেটো প্রক্রিয়াজাতকরণের মাধ্যমে সস প্রস্তুত করার সিদ্ধান্ত নেন। জনাব নীরবের কার্যাবলির ফলে কোন ধরনের উপযোগ সৃষ্টি হবে?", opts: ["সময়গত", "স্থানগত", "রূপগত", "স্বত্বগত"], correct: 2 },
+  { q: "উৎপাদনের খাত কয়টি?", opts: ["১", "২", "৩", "৪"], correct: 2 },
+  { q: "খনিজ সম্পদ অনুসন্ধান, বিদ্যুৎ, গ্যাস প্রভৃতি একটি দেশের অর্থনীতির কোন খাতের অন্তর্ভুক্ত?", opts: ["কৃষি", "শিল্প", "সেবা", "আমদানি"], correct: 1 },
+  { q: "তথ্য ও যোগাযোগ প্রযুক্তি কোন খাতের অন্তর্ভুক্ত?", opts: ["কৃষি", "শিল্প", "পর্যটন", "সেবা"], correct: 3 },
+  { q: "মাটি দিয়ে হাঁড়ি-পাতিল তৈরি উৎপাদনের কোন খাতের মধ্যে পড়ে?", opts: ["কৃষিজাত", "সেবা", "শিল্প", "নির্মাণ"], correct: 2 },
+  { q: "মূল্য জড়িত নয় কিসের সাথে?", opts: ["উৎপাদন", "উদ্ভাবন", "উন্নয়ন", "উৎপাদনশীলতা"], correct: 3 },
+  { q: "মিলন কৃষকের ছেলে। সে কৃষিকাজের পাশাপাশি তিনটি গাভী পালন করে। প্রতিদিন দুধ হয়, যা সে বিক্রি করে। এই কাজ উৎপাদনের আওতায় কোন খাতের অধীন?", opts: ["কৃষি", "শিল্প", "সেবা", "প্রাণীজ"], correct: 0 },
+  { q: "কোনটি উৎপাদনকারী প্রতিষ্ঠান?", opts: ["ঢাকা বিশ্ববিদ্যালয়", "ইউনিলিভার কোম্পানি", "বিআরটিসি", "গ্রামীণফোন"], correct: 1 },
+  { q: "কোনটি উৎপাদনের পর্যায়ভুক্ত?", opts: ["বাণিজ্য", "প্রত্যক্ষ সেবা", "অর্থ", "বিপণন"], correct: 3 },
+  { q: "কবির সাহেবকে কাঁচামাল কিনতে হয় ৮,০০০ টাকার এবং তিনি প্রতি মাসে ২৪,০০০ টাকার পণ্য উৎপাদন করেন। কবির সাহেবের উৎপাদনশীলতা কত?", opts: ["১৬,০০০", "৩২,০০০", "৩", "০.৩"], correct: 2 },
+  { q: "শ্রমের উৎপাদনশীলতার মাধ্যমে কী প্রকাশ পায়?", opts: ["শ্রমের সরবরাহ", "শ্রমের দক্ষতা", "শ্রমের উৎপাদন যোগ্যতা", "শ্রম ও উৎপাদনের সম্পর্ক"], correct: 1 },
+  { q: "গবেষণা ও উন্নয়ন উৎপাদনশীলতায় কী ভূমিকা রাখে?", opts: ["বাড়ায়", "শূন্য করে", "কমায়", "স্থিতিশীল রাখে"], correct: 0 },
+  { q: "নিচের কোনটি উৎপাদনশীলতা বাড়ানোর উপায়?", opts: ["বণ্টন ব্যবস্থা", "সংরক্ষণ ব্যবস্থা", "মোড়কীকরণ", "গবেষণা ও উন্নয়ন"], correct: 3 },
+  { q: "প্রতিষ্ঠানে বেশি পরিমাণ যন্ত্রপাতি ব্যবহারের ফলে কোনটি হয়?", opts: ["উৎপাদন ক্ষমতা কমে", "উৎপাদন ক্ষমতা বাড়ে", "শ্রমিকের দক্ষতা বাড়ে", "অবচয় কমে"], correct: 1 },
+  { q: "দক্ষতা প্রকাশ হয় কোনটির মাধ্যমে?", opts: ["উৎপাদন", "উপকরণ", "সময়", "উৎপাদনশীলতা"], correct: 3 },
+  { q: "কোনটি উৎপাদনশীলতাকে প্রভাবিত করে?", opts: ["প্রযুক্তি", "বিজ্ঞাপন", "জনসংখ্যা", "মুনাফা"], correct: 0 },
+  { q: "নতুন পণ্য উৎপাদনে সহায়তা করে কোনটি?", opts: ["সংগঠন কার্যাবলি", "মূলধন সরবরাহ", "শ্রম ব্যবহার", "গবেষণা কার্যাবলি"], correct: 3 }
+
+],
+'prod1_ch2': [{ q: 'উৎপাদনের প্রধান উপকরণ কয়টি?', opts: ['২টি', '৩টি', '৪টি', '৫টি'], correct: 2 },
+
+],
 'prod1_ch3': [{ q: 'উৎপাদনের মাত্রা কয়টি?', opts: ['২টি', '৩টি', '৪টি', '৫টি'], correct: 2 }],
 'prod1_ch4': [{ q: 'সামষ্টিক উৎপাদন ফলন বৃদ্ধি পায় কোন স্তরে?', opts: ['প্রথম', 'দ্বিতীয়', 'তৃতীয়', 'চতুর্থ'], correct: 0 }],
 'prod1_ch5': [{ q: 'উৎপাদন ব্যবস্থাপনা কাকে বলে?', opts: ['পণ্য বিক্রয়', 'উৎপাদন পরিকল্পনা ও নিয়ন্ত্রণ', 'কাঁচামাল ক্রয়', 'হিসাব রক্ষণ'], correct: 1 }],
@@ -537,7 +1730,123 @@ const QB={
 'prod1_ch8': [{ q: 'উৎপাদন ক্ষমতা নির্ভর করে কিসের ওপর?', opts: ['মজুরি', 'কাঁচামাল', 'যন্ত্রপাতি', 'চাহিদা'], correct: 2 }],
 'prod1_ch9': [{ q: 'শিল্পের অবস্থান নির্বাচন কোন ধরনের সিদ্ধান্ত?', opts: ['স্বল্পমেয়াদী', 'দীর্ঘমেয়াদী', 'মধ্যমেয়াদী', 'অস্থায়ী'], correct: 1 }],
 'prod1_ch10': [{ q: 'লে আউট পরিকল্পনার লক্ষ্য কী?', opts: ['মজুরি বৃদ্ধি', 'যাতায়াত খরচ বৃদ্ধি', 'প্রবাহ মসৃণকরণ', 'মেশিন ক্ষয়'], correct: 2 }],
-'prod2_ch1': [{ q: 'বিপণনের আধুনিক ধারণা কোনটি?', opts: ['উৎপাদন ভিত্তিক', 'পণ্য ভিত্তিক', 'বিক্রয় ভিত্তিক', 'ভোক্তা ভিত্তিক'], correct: 3 }],
+'prod2_ch1': [{ q: 'বিপণনের আধুনিক ধারণা কোনটি?', opts: ['উৎপাদন ভিত্তিক', 'পণ্য ভিত্তিক', 'বিক্রয় ভিত্তিক', 'ভোক্তা ভিত্তিক'], correct: 3 },
+
+    // Page 1: অনুশীলনী (ক. বহুনির্বাচনি প্রশ্ন)
+    { q: "বিপণন বা মার্কেটিং ক্রেতাদের জন্য কী সৃষ্টি করে?", opts: ['দ্রব্য', 'সেবা', 'ভ্যালু', 'ব্যয়'], correct: 2 },
+    { q: "বর্তমানে বিপণনের মূল উদ্দেশ্য কী?", opts: ['বিক্রেতাদের সন্তুষ্ট করা', 'ক্রেতাদের সন্তুষ্ট করা', 'পণ্য বিক্রির পরিমাণ বাড়ানো', 'প্রতিযোগীদের মোকাবিলা করা'], correct: 1 },
+    { q: "প্রত্যাশার তুলনায় পণ্যের কার্যকারিতা বেশি হলে কোনটি হয়?", opts: ['ক্রেতা সন্তুষ্টি', 'ক্রেতা অসন্তুষ্টি', 'ব্যবসায় প্রেষণা', 'অভাব হ্রাস'], correct: 0 },
+    { q: "বিপণনের মাধ্যমে কোনো কিছুর অভাব পূরণের সক্ষমতাকে কী বলে?", opts: ['বিক্রয়', 'ক্রেতা ভ্যালু', 'বিপণন', 'উপযোগ'], correct: 3 },
+    { q: "ডা. শাহেদ তার চেম্বার স্থানান্তরের পর পত্রিকায় বিজ্ঞপ্তি দিয়ে নতুন ঠিকানা সংবলিত সবাইকে জানালেন। ডা. শাহেদের কার্যক্রমটি বিপণনের কোনটির সাথে সঙ্গতিপূর্ণ?", opts: ['Service = Attributes + Benefit', 'Service = Activities + Knowledge', 'Service = Activities + Intangible benefits', 'Service = Needs + Demands'], correct: 2 },
+    { q: "সিহাব ইনফিনিটি থেকে ১,২০০ টাকায় একটি টি-শার্ট কিনে বেশ কয়েকদিন পরলো। সে ভাবছে ভবিষ্যতেও একই ব্র্যান্ডের শার্ট কিনবে। জুবায়েরের এ উপলব্ধিকে কী বলে?", opts: ['অভিজ্ঞতা', 'সম্পর্কভিত্তিক বিপণন', 'ক্রেতা সন্তুষ্টি', 'ক্রেতা ভ্যালু'], correct: 2 },
+    { q: "কত সাল থেকে মোবাইল মার্কেটিং যুগ শুরু হয়?", opts: ['১৮৬০', '১৯২০', '১৯৫০', '২০১০'], correct: 3 },
+    { q: "বিপণনের যে যুগে মানুষ উদ্বৃত্ত পণ্যের পরিবর্তে ঘাটতি পণ্য সংগ্রহ করতো তাকে কোন যুগ বলা হয়?", opts: ['আত্মনির্ভরশীলতার যুগ', 'বিনিময় যুগ', 'উৎপাদন যুগ', 'বিক্রয় যুগ'], correct: 1 },
+    { q: "১৯৩০ থেকে ১৯৫০ সাল পর্যন্ত কোন যুগ বিদ্যমান ছিল?", opts: ['উৎপাদন যুগ', 'বিক্রয় যুগ', 'বাজারজাতকরণ যুগ', 'ভোগ যুগ'], correct: 1 },
+    { q: "কোনটি বিপণনের সবচেয়ে পুরাতন মতবাদ?", opts: ['উৎপাদন মতবাদ', 'পণ্য মতবাদ', 'বিক্রয় মতবাদ', 'বাজারজাতকরণ মতবাদ'], correct: 0 },
+    { q: "কায়িক শ্রমকে যন্ত্রপাতি দখল করে বিপণন ক্রমবিকাশের কোন যুগে?", opts: ['বিনিময়', 'উৎপাদন', 'বিক্রয়', 'বিপণন'], correct: 1 },
+    { q: "কোন দেশে সর্ব প্রথম বিপণন শব্দটি ব্যবহৃত হয়?", opts: ['কানাডা', 'যুক্তরাষ্ট্র', 'যুক্তরাজ্য', 'ইতালি'], correct: 1 },
+    { q: "পণ্য বিপণনের সাথে কোনটি জড়িত?", opts: ['ভোক্তার সময় বেশি ব্যয় হয়', 'উপযোগ সৃষ্টি হয়', 'সমাজের অকল্যাণ হয়', 'উৎপাদন কমে'], correct: 1 },
+    { q: "মূল্যকে ভ্যালু হিসেবে বিবেচনা করে কে?", opts: ['ক্রেতা', 'বিক্রেতা', 'উৎপাদক', 'বিপণনকারী'], correct: 1 },
+    { q: "কোনো বিষয়ে অর্জিত বাস্তব জ্ঞানকে কী বলে?", opts: ['প্রয়োজন', 'অভিজ্ঞতা', 'ভ্যালু', 'সন্তুষ্টি'], correct: 1 },
+    { q: "জীবনযাত্রার মান বাড়লে ভোক্তাদের কোনটি পরিবর্তন হয়?", opts: ['ভোগের পরিমাণ বাড়ে', 'আয় কমে', 'ভোগের পরিমাণ কমে', 'সন্তুষ্টি কমে'], correct: 0 },
+    { q: "অভাব থেকে চাহিদায় রূপান্তরিত হতে কয়টি শর্ত পূরণ করতে হয়?", opts: ['২টি', '৩টি', '৪টি', '৫টি'], correct: 1 },
+    { q: "বাংলাদেশের রবিন ক্ষুধা পেলে ভাত খেতে চায়। কিন্তু ঢাকায় বেড়াতে আসা তার আমেরিকান বন্ধু ফাস্টফুড খেতে চায়। তাদের এ ভিন্নতাকে কী বলে?", opts: ['প্রয়োজন', 'চাহিদা', 'অভাব', 'ক্রেতা ভ্যালু'], correct: 1 },
+    { q: "লেনদেনের ক্ষেত্রে কোন বিষয়টি বেশি গুরুত্বপূর্ণ?", opts: ['পণ্যমূল্য', 'মুনাফা', 'আর্থিক মূল্য', 'বিনিময় মূল্য'], correct: 2 },
+    { q: "চাহিদা ও সরবরাহের মধ্যে ভারসাম্য রক্ষার ক্ষেত্রে কোন ধরনের বিপণন কাজের গুরুত্ব সর্বাধিক?", opts: ['সঠিক উৎস থেকে অর্থসংস্থান', 'উন্নত বিক্রয়', 'উন্নত পরিবহন ব্যবস্থা', 'পর্যায় ক্রমিক ক্রয়'], correct: 2 },
+
+    // Page 2: বহুপদী সমাপ্তিসূচক প্রশ্ন (২১-৩৭)
+    { q: "বাজারজাতকরণের মাধ্যমে চূড়ান্তভাবে কার কাছে পণ্য সামগ্রী পৌঁছানো হয়?", opts: ['রপ্তানিকারকের কাছে', 'ভোক্তার কাছে', 'উৎপাদকের কাছে', 'বিক্রেতার কাছে'], correct: 1 },
+    { q: "পণ্যের উপযোগ নিঃশেষকারীকে কী বলে?", opts: ['ক্রেতা', 'ভোক্তা', 'উৎপাদক', 'বিক্রেতা'], correct: 1 },
+    { q: "উৎপাদন কাজ পূর্ণতা পায় কখন?", opts: ['যখন পণ্য পূর্ণতা পায় তখন', 'যখন পণ্য ভালো হয়', 'যখন পণ্যের প্রচার হয়', 'যখন ভোক্তা ভোগ করে'], correct: 3 },
+    { q: "নিজে অর্থ ব্যয় না করেও পণ্য ব্যবহার করতে পারেন কে?", opts: ['পরিবেশক', 'ক্রেতা', 'ভোক্তা', 'উৎপাদনকারী'], correct: 2 },
+    { q: "‘ভোক্তাই রাজা’ এ দর্শনটি বিপণনের কোন বৈশিষ্ট্যকে ফুটিয়ে তোলে?", opts: ['বিপণন একটি ব্যবস্থাপকীয় প্রক্রিয়া', 'বিপণন একটি সামাজিক প্রক্রিয়া', 'বিপণন একটি সামগ্রিক প্রক্রিয়া', 'বিপণন একটি ভোক্তামুখী প্রক্রিয়া'], correct: 3 },
+    { q: "আধুনিক বিপণন ব্যবস্থায় কোনটির ওপর জোর দেওয়া হয়?", opts: ['মুনাফা', 'ভোক্তারসামর্থ্য', 'ভোক্তা সম্পর্ক', 'বাজার আয়তন'], correct: 2 },
+    { q: "বিপণনের সামগ্রিক কাজ কাদের ঘিরে সংগঠিত হয়?", opts: ['মধ্যস্বত্ব ব্যবসায়ী', 'উৎপাদনকারী', 'ভোক্তা', 'এজেন্ট'], correct: 2 },
+    { q: "জীবনযাত্রার মান উন্নয়নের সূচক কয়টি?", opts: ['চারটি', 'পাঁচটি', 'ছয়টি', 'সাতটি'], correct: 1 },
+    { q: "মোবাইল বিপণনে বাংলাদেশে মোবাইল কোম্পানিগুলোর আগের তুলনায় বেশি সুবিধা অফার ও সেবা দেওয়ার কারণ কী?", opts: ['সর্বাধিক মুনাফা অর্জন', 'জাতীয় পুরস্কার অর্জন', 'আন্তর্জাতিক বাজারে খ্যাতি অর্জন', 'ব্যবস্থাপনায় পরিবর্তন'], correct: 3 },
+    { q: "প্রেষণা দেওয়া বিপণনের কোন প্রক্রিয়ার কাজ?", opts: ['ব্যবস্থাপকীয় প্রক্রিয়া', 'গতিশীল প্রক্রিয়া', 'সামাজিক প্রক্রিয়া', 'অনুসন্ধানমূলক প্রক্রিয়া'], correct: 0 },
+    { q: "বিপণন মতবাদ গুরুত্বারোপ করে কোনটিতে?", opts: ['ক্রেতার প্রয়োজনের ওপর', 'কোম্পানির বিদ্যমান পণ্যের ওপর', 'মানবকল্যাণের ওপর', 'বিক্রেতার ওপর'], correct: 0 },
+    { q: "বিপণনের বৈশিষ্ট্য হচ্ছে—\ni. গতিশীল প্রক্রিয়া\nii. ব্যবস্থাপকীয় প্রক্রিয়া\niii. অর্থনৈতিক প্রক্রিয়া\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "ক্রেতা ভ্যালু বাড়ে, যদি—\ni. পণ্যের মান বা সেবা বাড়ে\nii. পণ্যের মূল্য বা দাম কমে\niii. পণ্যের মান কমে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বিপণন হচ্ছে—\ni. পণ্য ও সেবা বিক্রি\nii. ক্রেতা ও ভোক্তামুখী কার্যাবলি\niii. সম্ভাব্য বাজার গবেষণা\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "বিপণন সৃষ্টি করে—\ni. ক্রেতা ভ্যালু\nii. বণ্টন\niii. ক্রেতা সম্পর্ক\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+    { q: "বিপণনের মূল লক্ষ্য হচ্ছে—\ni. ক্রেতা ভ্যালু সৃষ্টি\nii. ক্রেতাদের সন্তুষ্টি\niii. পণ্য উৎপাদন\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'ii ও iii', 'i ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "জাহির সাহেব ব্যাক-এর বিপণন ব্যবস্থাপক। তাঁর বিপণনের কাজে বিভিন্ন অর্থনৈতিক বিষয় জড়িত। সেগুলো হলো—\ni. গুদামজাতকরণ\nii. সংগঠিতকরণ\niii. পরিবহন\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+
+    // Page 3: বহুপদী সমাপ্তিসূচক প্রশ্ন (৩৮-৪৮)
+    { q: "ভোক্তার অভাব পূরণ করার মাধ্যম হলো—\ni. পণ্য পাওয়ার ইচ্ছা\nii. ইচ্ছা পূরণের আর্থিক সামর্থ্য\niii. পণ্য সম্পর্কে অন্বেষণ\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বিপণনের সামাজিক গুরুত্ব হচ্ছে—\ni. প্রাতিষ্ঠানিক আয় বাড়া\nii. কর্মসংস্থান সৃষ্টি\niii. নতুন পণ্য ভোগের সুযোগ\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+    { q: "বিপণন কার্যাবলি যেভাবে বাংলাদেশের উন্নয়নে ভূমিকা রাখে—\ni. কর্মসংস্থান সৃষ্টি করে\nii. রপ্তানি কমিয়ে\niii. যোগাযোগ ব্যবস্থার উন্নয়ন করে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+    { q: "জনাব কবির তার প্রতিষ্ঠানের পণ্য ভারতে বিক্রির জন্য একটি শাখা খুলেছেন এবং বিক্রয়কর্মী নিয়োগ দিয়েছেন। এর ফলে—\ni. জাতীয় আয় বাড়বে\nii. আন্তর্জাতিক সুনাম বাড়বে\niii. প্রতিযোগিতা মোকাবিলা হবে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বিপণন যেভাবে ভোক্তাদের জীবনযাত্রার মান উন্নয়ন করে—\ni. উন্নতমানের পণ্য সরবরাহ\nii. কর্মসংস্থানের সুযোগ সৃষ্টি\niii. উৎপাদনে নতুন প্রযুক্তি স্থাপন\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বিপণন অর্পণের অন্তর্ভুক্ত হলো—\ni. পণ্য\nii. সেবা\niii. ভ্যালু\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "করিম এগ্রো লিমিটেড বিশ্বব্যাপী বিপণন কাজ সম্প্রসারণ করতে চায়। এজন্য প্রয়োজন—\ni. আন্তর্জাতিক মেলায় অংশগ্রহণ\nii. বিপণনে উন্নত প্রযুক্তির ব্যবহার\niii. প্রতিষ্ঠানের ব্যবস্থাপনায় পরিবর্তন\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "জনাব তারেক তার নতুন উদ্ভাবিত পণ্যের জন্য দীর্ঘমেয়াদি সম্পর্কভিত্তিক বিপণন অনুসরণ করতে চান। এক্ষেত্রে জনাব তারেক সম্পর্ক গড়ে তুলবেন—\ni. পরিবেশকের সাথে\nii. সরবরাহকারী ও বিক্রেতার সাথে\niii. ক্রেতার সাথে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+    { q: "বিপণন মতবাদের মূল ভিত্তি হলো—\ni. ভোক্তার প্রয়োজন\nii. সমন্বিত বিপণন\niii. ক্রেতা সন্তুষ্টি বিধান\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "সামাজিক বিপণনের উদাহরণ হলো—\ni. নিরাপদ সড়ক চাই\nii. ধূমপান বর্জন করুন\niii. আপনার শিশুকে স্কুলে পাঠান\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+
+    // Page 4: খ. বোর্ড পরীক্ষার বহুনির্বাচনি প্রশ্ন (৬১-৮৪)
+    { q: "বিপণন কী?", opts: ['পণ্য উৎপাদন', 'পণ্যের ভ্যালু সৃষ্টি', 'পণ্য ভোগ', 'গ্রাহকদের সন্তুষ্টি বিধান'], correct: 1 },
+    { q: "আধুনিক বিপণনের জনক কে?", opts: ['Philip Kotler', 'Gary Armstrong', 'B. Gosh', 'M. C. Carthy'], correct: 0 },
+    { q: "বিপণন ক্রেতাদের জন্য কী সৃষ্টি করে?", opts: ['পণ্য', 'সেবা', 'ভ্যালু', 'ব্যয়'], correct: 2 },
+    { q: "ক্রেতা ভ্যালু কী?", opts: ['পণ্য থেকে প্রাপ্ত সুবিধা', 'পণ্যের মূল্য', 'ক্রেতা ও বিক্রেতা সম্পর্ক', 'প্রাপ্ত সুবিধা ও ব্যয়ের পার্থক্য'], correct: 3 },
+    { q: "ক্রেতা সন্তুষ্টি কী?", opts: ['পণ্য থেকে প্রাপ্ত সুবিধা', 'আনন্দ ও হতাশার অনুভূতি', 'লাভজনকভাবে বিক্রয় সম্পাদন', 'বিভিন্ন পক্ষের মধ্যে সম্পর্ক স্থাপন'], correct: 1 },
+    { q: "ক্রেতা সন্তুষ্টির মাধ্যমে বিনিময় সম্পর্ক স্থাপন করাকে কী বলে?", opts: ['পরিবেশ', 'বিপণন', 'বাজার', 'চাহিদা'], correct: 1 },
+    { q: "বাজারজাতকরণে বাজার কিসের সাথে সম্পৃক্ত?", opts: ['ক্রেতা', 'স্থান', 'দ্রব্য', 'বিক্রেতা'], correct: 0 },
+    { q: "কোনো কিছু পাওয়ার আকাঙ্ক্ষাকে কী বলে?", opts: ['অভাব', 'চাহিদা', 'প্রয়োজন', 'পণ্য'], correct: 2 },
+    { q: "বিপণন কিসের ওপর সর্বোচ্চ গুরুত্ব দেয়?", opts: ['বিক্রেতার ক্রয়ক্ষমতা', 'প্রচার ও বিজ্ঞাপন', 'পণ্য উৎপাদন', 'ক্রেতা সন্তুষ্টি'], correct: 3 },
+    { q: "বিপণনের বর্তমান সময়কালকে বলা হয়—", opts: ['বিপণন যুগ', 'সামাজিক বিপণন যুগ', 'মোবাইল মার্কেটিং যুগ', 'সম্পর্কভিত্তিক বিপণন যুগ'], correct: 2 },
+    { q: "শিল্প বিপ্লব কোথায় সংঘটিত হয়েছিল?", opts: ['যুক্তরাষ্ট্রে', 'ইংল্যান্ডে', 'ফ্রান্সে', 'জাপানে'], correct: 1 },
+    { q: "বিপণন যুগ কত সাল থেকে শুরু হয়?", opts: ['১৮৬০', '১৯২০', '১৯৫০', '১৯৭০'], correct: 2 },
+    { q: "কোনটি বিপণনের বৈশিষ্ট্য?", opts: ['কর্মসংস্থান', 'অর্থনৈতিক উন্নয়ন', 'উপযোগ সৃষ্টি', 'জীবনযাত্রার মানোন্নয়ন'], correct: 3 },
+    { q: "কোনটি বিপণনের মৌলিক বিষয়ের উপাদান?", opts: ['বিনিময়', 'অর্থসংস্থান', 'মূল্য', 'বণ্টন'], correct: 0 },
+    { q: "সংস্কৃতি, ব্যক্তিত্ব ও জ্ঞানের মাধ্যমে প্রয়োজনের বাস্তব রূপান্তরকে কী বলে?", opts: ['প্রয়োজন', 'অভাব', 'চাহিদা', 'ভ্যালু'], correct: 1 },
+    { q: "উপযোগ আছে এমন কিছু থেকে নিজেকে বঞ্চিত মনে করার অনুভূতি হলো—", opts: ['ভ্যালু', 'চাহিদা', 'অভাব', 'প্রয়োজন'], correct: 3 },
+    { q: "অভাব যখন কোনো ব্যক্তির ক্রয় ক্ষমতার শর্ত পূরণ করে তখন সেটি হয়—", opts: ['প্রয়োজন', 'অভাব', 'চাহিদা', 'মূল্যবোধ'], correct: 2 },
+    { q: "পণ্য থেকে পাওয়া সুবিধা ও পণ্যের জন্য ব্যয়িত অর্থের পার্থক্যকে কী বলে?", opts: ['প্রয়োজন', 'ক্রেতা সন্তুষ্টি', 'ক্রেতা ভ্যালু', 'বিনিময়'], correct: 2 },
+    { q: "প্রয়োজন কী?", opts: ['বঞ্চিত হওয়ার অনুভূতি', 'অভাবের অনুভূতি', 'চাহিদার অনুভূতি', 'সন্তুষ্টির অনুভূতি'], correct: 0 },
+    { q: "প্রকৃত পণ্য কোনটি?", opts: ['সংস্থাপন', 'ব্র্যান্ড নাম', 'পণ্যের উপকারিতা', 'মূল্য'], correct: 1 },
+    { q: "কোনটি বিপণনের সর্বোচ্চ গুরুত্বপূর্ণ উপাদান?", opts: ['পণ্য উৎপাদন', 'ক্রেতার চাহিদা', 'ক্রেতা সন্তুষ্টি', 'পরিবহন'], correct: 2 },
+    { q: "বিপণনের সামাজিক গুরুত্ব হলো—", opts: ['উপযোগ সৃষ্টি', 'জাতীয় আয় বৃদ্ধি', 'সুষ্ঠু বণ্টন', 'জীবনযাত্রার মান উন্নয়ন'], correct: 3 },
+    { q: "কোনটি দেশের উন্নয়নের গতিকে ত্বরান্বিত করে?", opts: ['শিল্পায়ন', 'নগরায়ন', 'বিজ্ঞাপন', 'মূলধন'], correct: 0 },
+    { q: "ভোক্তার বৈশিষ্ট্য কোনটি?", opts: ['উপযোগ সৃষ্টিকারী', 'উপযোগ বৃদ্ধিকারী', 'উপযোগ নিঃশেষকারী', 'উপযোগ স্থানান্তরকারী'], correct: 2 },
+
+    // Page 5: বোর্ড প্রশ্ন ও উদ্দীপক (৮৫-৯৭)
+    { q: "নিচের কোন পর্যায়ক্রমটি সঠিক?", opts: ['অভাব -> প্রয়োজন -> চাহিদা', 'প্রয়োজন -> অভাব -> চাহিদা', 'চাহিদা -> অভাব -> প্রয়োজন', 'চাহিদা -> প্রয়োজন -> অভাব'], correct: 1 },
+    { q: "বিপণনের সামাজিক গুরুত্ব হলো—\ni. উপযোগ সৃষ্টি\nii. কর্মসংস্থান সৃষ্টি\niii. ভোক্তার সন্তুষ্টি\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+    { q: "বিপণনের মাধ্যমে যে উপযোগ সৃষ্টি হয় তা হলো—\ni. স্থানগত\nii. সময়গত\niii. রূপগত\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বিপণন কার্যাবলির উদ্দেশ্য হলো—\ni. ভোক্তাদের সন্তুষ্ট করা\nii. বিক্রয় ও মুনাফা বৃদ্ধি করা\niii. কর্মসংস্থানের সুযোগ সৃষ্টি করা\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "বিপণনের মূল লক্ষ্য হচ্ছে—\ni. ক্রেতা ভ্যালু সৃষ্টি\nii. ক্রেতাদের সন্তুষ্টি\niii. পণ্য উন্নয়ন\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+    { q: "বাংলাদেশের অর্থনৈতিক উন্নয়নে বিপণন কীভাবে ভূমিকা রাখে—\ni. কৃষি উন্নয়নে\nii. সম্পদের সদ্ব্যবহারে\niii. সরকারি ব্যয় কমাতে\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'ii ও iii', 'i ও iii', 'i, ii ও iii'], correct: 0 },
+    { q: "ভোক্তাদের দৃষ্টিকোণ থেকে বিপণনের গুরুত্ব—\ni. নতুন পণ্য ভোগ\nii. নিয়মিত পণ্য সরবরাহ\niii. ন্যায্যমূল্য\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "বিপণন কোন ধরনের প্রক্রিয়া?\ni. মানবিক\nii. সামাজিক\niii. ব্যবস্থাপকীয়\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 2 },
+    { q: "সামাজিক বাজারজাতকরণের অন্তর্ভুক্ত হলো—\ni. ধূমপান বর্জন\nii. নিরাপদ সড়ক চাই\niii. আপনার সন্তানকে স্কুলে পাঠান\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+    { q: "জনাব হাদীর কর্মকাণ্ডের প্রাথমিক পর্যায়ে বিপণন বৈশিষ্ট্যের কোন প্রক্রিয়াটি ফুটে উঠেছে?", opts: ['ব্যবস্থাপকীয়', 'সামাজিক', 'গতিশীল', 'সমন্বিত'], correct: 0 },
+    { q: "উদ্দীপকে যে যুগের ওপর গুরুত্বারোপ করে জনাব হাদী সফলতা পেয়েছেন তা হলো—\ni. বিপণন\nii. সামাজিক বিপণন\niii. মোবাইল বিপণন\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 1 },
+    { q: "আফনানের ভাতের পরিবর্তে ফাস্টফুড খাওয়া বাজারজাতকরণের কোন মৌলিক ধারণাটির প্রকাশ ঘটেছে?", opts: ['অভাব', 'প্রয়োজন', 'চাহিদা', 'ক্রেতা-ভ্যালু'], correct: 0 },
+    { q: "আফনানের ফাস্টফুড খাওয়ার কারণ হলো—\ni. নিজস্ব সংস্কৃতি\nii. অভাব\niii. ব্যক্তির ব্যক্তিত্ব\nনিচের কোনটি সঠিক?", opts: ['i ও ii', 'i ও iii', 'ii ও iii', 'i, ii ও iii'], correct: 3 },
+
+    // Page 6: গ. বিশ্ববিদ্যালয় ভর্তি পরীক্ষার বহুনির্বাচনি প্রশ্ন (১-১৮)
+    { q: "বিপণনের মৌলিক ধারণা কোনটি?", opts: ['উৎপাদন', 'সঞ্চয়', 'ভোগ', 'বিনিময়'], correct: 3 },
+    { q: "নিচের কোন মতবাদটিতে 'অনুধাবন ও সাড়া প্রদান' দর্শন অনুসরণ করা হয়?", opts: ['উৎপাদন মতবাদ', 'বিপণন মতবাদ', 'বিক্রয় মতবাদ', 'সামাজিকীক বিপণন মতবাদ'], correct: 1 },
+    { q: "বিপণনের সবচেয়ে পুরাতন ধারণা কোনটি?", opts: ['উৎপাদন', 'পণ্য', 'বিনিময়', 'ভোগ'], correct: 0 },
+    { q: "নিচের কোনটি বিপণনের কাজ নয়?", opts: ['বিক্রয়', 'অর্থায়ন', 'পণ্য ব্যবস্থাপনা', 'কর্মী সন্তুষ্টি'], correct: 3 },
+    { q: "বিপণনে কোনটিকে সবচেয়ে বেশি গুরুত্ব দেওয়া হয়?", opts: ['স্থান', 'মূল্য', 'ভোক্তা', 'পণ্য'], correct: 2 },
+    { q: "“অনেকে মানুষ মার্সিডিজ-বেঞ্জ চায়, কেবল কয়েক জনই কিনতে সক্ষম।” এটি — উদাহরণ।", opts: ['প্রয়োজনের', 'চাওয়ার', 'সরবরাহের', 'চাহিদার'], correct: 3 },
+    { q: "নিচের কোনটি ভোক্তা বাজার বিভক্তিকরণের স্বীকৃত ভিত্তি নয়?", opts: ['জনসংখ্যাগত', 'ভৌগোলিক', 'প্রতিযোগিতামূলক অবস্থান', 'মনস্তাত্ত্বিক'], correct: 3 },
+    { q: "কোনো কিছু থেকে ভোক্তার বঞ্চিত হওয়ার অনুভূতিকে বলে—", opts: ['অভাব', 'প্রয়োজন', 'চাহিদা', 'যোগান'], correct: 1 },
+    { q: "নিচের কোনটি ভোক্তাদের সঙ্গে দীর্ঘমেয়াদি সম্পর্ক সৃষ্টিতে মুখ্য ভূমিকা পালন করে?", opts: ['পণ্যের কম মূল্য', 'ক্রেতা সন্তুষ্টি', 'প্রয়োজন অনুধাবন', 'অধিক বিজ্ঞাপন'], correct: 1 },
+    { q: "“অনেকে মানুষই বিএমডব্লিউ গাড়ি কিনতে চায়, তবে মাত্র কয়েকজনই ক্রয় করার সামর্থ্য রাখে”-এটি নিচের কোনটির উদাহরণ?", opts: ['চাহিদা', 'অভিজ্ঞতা', 'অভাব', 'প্রয়োজন'], correct: 0 },
+    { q: "মার্কেটিং ক্রেতাদের জন্য নিচের কোনটি সৃষ্টি করে?", opts: ['সেবা', 'পণ্য', 'ভ্যালু', 'অভিজ্ঞতা'], correct: 2 },
+    { q: "আধুনিক বিপণনের জনক কে?", opts: ['পিটার ড্রাকার', 'ফিলিপ কোটলার', 'লেস্টার ওয়াডারম্যান', 'আব্রাহাম মাসলো'], correct: 1 },
+    { q: "বাজারজাতকরণের সর্বাধুনিক মতবাদ কোনটি?", opts: ['Production Concept', 'Societal Marketing Concept', 'Selling Concept', 'Product Concept'], correct: 1 },
+    { q: "বাজারজাতকরণের মাধ্যমে যে উপযোগ সৃষ্টি হয় না—", opts: ['ভাবমূর্তিগত', 'স্থানগত', 'কর্মগত', 'তথ্যগত'], correct: 0 },
+    { q: "বাজারজাতকরণের কাজ নয়—", opts: ['পণ্য পরিকল্পনা', 'উৎপাদন', 'বাজার বিভাজন', 'বণ্টন প্রণালি নির্ধারণ'], correct: 1 },
+    { q: "নিচের কোনটি বাজারজাতকরণের মৌলিক ভিত্তি?", opts: ['বিনিময়', 'বিক্রয়', 'সম্পর্ক', 'বাজার'], correct: 3 },
+    { q: "বিপণন প্রক্রিয়ার প্রথম ধাপ কোনটি?", opts: ['ক্রেতা ভ্যালু অর্জন', 'ক্রেতার প্রয়োজন ও অভাব অনুধাবন', 'বিপণন বাজেট নির্ধারণ', 'বিক্রয় বাহিনী গঠন'], correct: 1 },
+    { q: "দৃশ্যমান ও অদৃশ্যমান কোন কিছু যা ভোক্তার প্রয়োজন পূরণ করতে পারে তাকে বলে—", opts: ['সেবা', 'পণ্য', 'চাহিদা', 'বাজার'], correct: 1 }
+
+],
 'prod2_ch2': [{ q: 'বিপণন পরিবেশ কয় প্রকার?', opts: ['২ প্রকার', '৩ প্রকার', '৪ প্রকার', '৫ প্রকার'], correct: 0 }],
 'prod2_ch3': [{ q: 'বিপণন কার্যাবলী কয়টি?', opts: ['৩টি', '৪টি', '৫টি', '৬টি'], correct: 1 }],
 'prod2_ch4': [{ q: 'বিপণন মিশ্রণে উপাদান কয়টি?', opts: ['৩টি', '৪টি', '৫টি', '৬টি'], correct: 1 }],
@@ -556,7 +1865,7 @@ function generateQuestions(tid){
 }
 
 // === STATE ===
-let currentSubject=null,currentTopicId=null,currentQuestions=[],currentQIndex=0,userAnswers=[],quizTimer=null,timeRemaining=60,startTime=0;
+let currentSubject=null,currentTopicId=null,currentQuestions=[],currentQIndex=0,userAnswers=[],quizTimer=null,timeRemaining=7200,startTime=0;
 
 // === RENDER HOME ===
 function renderSubjects(){
@@ -577,7 +1886,6 @@ function openSubject(id){
   if(!currentSubject)return;
   document.getElementById('subjectTitle').textContent=currentSubject.name+' '+currentSubject.paper;
   document.getElementById('subjectSubtitle').textContent='অধ্যায় নির্বাচন করুন';
-  
   const tp=topics[id]||[];
   let html = '';
   tp.forEach(group => {
@@ -599,22 +1907,18 @@ function openSubject(id){
           </button>`;
       }).join('');
   });
-  
   document.getElementById('topicList').innerHTML = html;
   navTo('subject');
 }
 
 // === QUIZ LOGIC ===
 function startQuiz(sid, tid, chapIndex){
-  if(!isPremium && chapIndex > 0) {
-      showToast('এই অধ্যায়টি প্রিমিয়াম। আনলক করতে সাবস্ক্রিপশন নিন!', 'error');
-      return;
-  }
+  if(!isPremium && chapIndex > 0) { showPremiumNoticeOnce(); return; }
   currentTopicId=tid;
   currentQuestions=generateQuestions(tid);
   currentQIndex=0;
   userAnswers=new Array(currentQuestions.length).fill(-1);
-  timeRemaining=60;
+  timeRemaining=7200;
   startTime=Date.now();
   showPage('quiz');
   renderQuestion();
@@ -693,9 +1997,6 @@ function retryQuiz(){startQuiz(currentSubject.id,currentTopicId, 0)}
 // === INIT ===
 renderSubjects();
 updateUI();
-if(localStorage.getItem('cquizoPremium') === null) {
-    document.getElementById('loginModal').style.display = 'flex';
-}
 </script>
 </body>
 </html>
